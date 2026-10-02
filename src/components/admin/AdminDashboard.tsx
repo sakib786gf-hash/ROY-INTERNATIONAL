@@ -22,10 +22,12 @@ import {
   MessageSquare,
   ArrowLeft,
   Trash2,
-  LogOut
+  LogOut,
+  UserPlus
 } from 'lucide-react';
 import { User, WithdrawalRequest, Transaction, PlatformStats } from '../../types';
 import { StorageService } from '../../services/storage';
+import { RegisterModal } from '../auth/RegisterModal';
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -74,6 +76,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastType, setBroadcastType] = useState<'info' | 'success' | 'warning' | 'alert'>('info');
   const [broadcastSuccess, setBroadcastSuccess] = useState(false);
+
+  // Admin user registration modal state
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
 
   // Filter only regular users
   const regularUsers = users.filter((u) => u.role === 'user');
@@ -287,8 +292,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               />
             </div>
 
-            {/* Filter buttons */}
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            {/* Filter buttons & Register User button */}
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
               <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
                 <Filter className="w-3.5 h-3.5" />
                 Filter:
@@ -322,6 +327,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 }`}
               >
                 Inactive ({stats.inactiveUsers})
+              </button>
+
+              {/* Admin Register New User Button */}
+              <button
+                type="button"
+                onClick={() => setIsCreateUserOpen(true)}
+                className="ml-auto sm:ml-2 px-3.5 py-1.5 rounded-xl bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-[#65ff00]/20 cursor-pointer transition-all active:scale-95"
+                title="Register and authorize a new user"
+              >
+                <UserPlus className="w-4 h-4 stroke-[2.5]" />
+                <span>+ Register User</span>
               </button>
             </div>
           </div>
@@ -373,7 +389,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {/* User Financials & KYC */}
                     <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
                       <div>
-                        <span className="text-slate-500 text-[10px] block">Wallet Balance</span>
+                        <span className="text-slate-500 text-[10px] block">Account Balance</span>
                         <span className="font-bold font-mono text-cyan-300 text-sm">
                           {StorageService.formatINR(u.balance)}
                         </span>
@@ -442,7 +458,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <th className="py-3 px-4">User & Contact</th>
                   <th className="py-3 px-4">Govt KYC (Aadhaar & PAN)</th>
                   <th className="py-3 px-4">Bank Account</th>
-                  <th className="py-3 px-4">Wallet Balance</th>
+                  <th className="py-3 px-4">Account Balance</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Admin Actions</th>
                 </tr>
@@ -1218,7 +1234,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <p><strong className="text-white text-sm">{userToDelete.fullName}</strong></p>
                 <p className="font-mono text-[11px] text-cyan-300">{userToDelete.email}</p>
                 <p className="font-mono text-[11px] text-slate-400">UIDAI: {userToDelete.aadhaarNumber}</p>
-                <p className="font-mono text-emerald-400 font-bold mt-1 text-sm">Wallet Balance: ₹{userToDelete.balance.toLocaleString('en-IN')}</p>
+                <p className="font-mono text-emerald-400 font-bold mt-1 text-sm">Account Balance: ₹{userToDelete.balance.toLocaleString('en-IN')}</p>
               </div>
             </div>
 
@@ -1241,6 +1257,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* ADMIN REGISTER NEW USER MODAL */}
+      <RegisterModal
+        isOpen={isCreateUserOpen}
+        onClose={() => setIsCreateUserOpen(false)}
+        onSuccess={() => {
+          setIsCreateUserOpen(false);
+          onRefreshData();
+        }}
+        isAdmin={true}
+      />
     </div>
   );
 };

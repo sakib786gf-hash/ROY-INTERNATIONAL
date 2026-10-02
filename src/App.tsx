@@ -8,7 +8,6 @@ import { SpaceBackground } from './components/common/SpaceBackground';
 import { Navbar } from './components/common/Navbar';
 import { NotificationBar } from './components/common/NotificationBar';
 import { AuthPage } from './components/auth/AuthPage';
-import { RegisterModal } from './components/auth/RegisterModal';
 import { UserDashboard } from './components/user/UserDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AddMoneyModal } from './components/wallet/AddMoneyModal';
@@ -31,7 +30,6 @@ export default function App() {
   const [stats, setStats] = useState<PlatformStats>(() => StorageService.getPlatformStats());
 
   // Modals
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isSendMoneyOpen, setIsSendMoneyOpen] = useState(false);
@@ -85,20 +83,12 @@ export default function App() {
     }
   };
 
-  // If user is logged out or no current user, show the exact AuthPage from Screenshot_20260927_223000.jpg
+  // If user is logged out or no current user, show the exact AuthPage (Admin registers users)
   if (isLoggedOut || !currentUser) {
     return (
       <SpaceBackground>
         <AuthPage
           onSuccess={handleUserLoginSuccess}
-          onOpenRegister={() => setIsRegisterOpen(true)}
-        />
-
-        <RegisterModal
-          isOpen={isRegisterOpen}
-          onClose={() => setIsRegisterOpen(false)}
-          onSuccess={handleUserLoginSuccess}
-          onSwitchToLogin={() => setIsRegisterOpen(false)}
         />
       </SpaceBackground>
     );
@@ -143,13 +133,6 @@ export default function App() {
       </main>
 
       {/* Modals */}
-      <RegisterModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        onSuccess={handleUserLoginSuccess}
-        onSwitchToLogin={() => setIsRegisterOpen(false)}
-      />
-
       <AddMoneyModal
         isOpen={isAddMoneyOpen}
         onClose={() => setIsAddMoneyOpen(false)}

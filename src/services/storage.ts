@@ -58,10 +58,10 @@ const INITIAL_USERS: User[] = [
     isActive: true,
     isDeleted: false,
     bankDetails: {
-      bankName: 'State Bank of India',
-      accountHolderName: 'Sakib Khan',
-      accountNumber: '38947281920',
-      ifscCode: 'SBIN0001234',
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
       accountType: 'Savings Account',
     },
     createdAt: '2026-01-10T11:20:00.000Z',
@@ -81,10 +81,10 @@ const INITIAL_USERS: User[] = [
     isActive: true,
     isDeleted: false,
     bankDetails: {
-      bankName: 'ICICI Bank',
-      accountHolderName: 'Priya Sharma',
-      accountNumber: '001101567890',
-      ifscCode: 'ICIC0000011',
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
       accountType: 'Savings Account',
     },
     createdAt: '2026-01-15T09:45:00.000Z',
@@ -104,10 +104,10 @@ const INITIAL_USERS: User[] = [
     isActive: false, // Sample inactive user
     isDeleted: true,
     bankDetails: {
-      bankName: 'Punjab National Bank',
-      accountHolderName: 'Rahul Varma',
-      accountNumber: '0624000100987654',
-      ifscCode: 'PUNB0062400',
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
       accountType: 'Savings Account',
     },
     createdAt: '2026-02-01T14:30:00.000Z',
@@ -123,8 +123,8 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     userEmail: 'sakib786gf@gmail.com',
     type: 'credit',
     amount: 50000,
-    description: 'Welcome Bonus Deposit credited to Metal Wallet',
-    referenceId: 'REF-MET-88921',
+    description: 'Account Credited',
+    referenceId: 'CR-MET-88921',
     status: 'completed',
     createdAt: '2026-02-15T10:15:00.000Z',
   },
@@ -135,7 +135,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     userEmail: 'sakib786gf@gmail.com',
     type: 'credit',
     amount: 30000,
-    description: 'UPI Simulated Deposit via Google Pay UPI',
+    description: 'Account Credited',
     referenceId: 'UPI-982736184912',
     status: 'completed',
     createdAt: '2026-02-18T14:40:00.000Z',
@@ -233,7 +233,7 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif-1',
     userId: 'all',
-    title: 'Welcome to Metal Wallet 🚀',
+    title: 'Welcome to Metal Account 🚀',
     message: 'Experience next-generation metallic digital banking simulator powered by INR & zero transaction fees.',
     type: 'info',
     isRead: false,
@@ -276,8 +276,30 @@ export const StorageService = {
         return INITIAL_USERS;
       }
       const parsed: User[] = JSON.parse(data);
-      // Admin has NO wallet balance
-      return parsed.map((u) => (u.role === 'admin' ? { ...u, balance: 0 } : u));
+      // Admin has NO account balance; reset auto-generated fake bank details to blank
+      return parsed.map((u) => {
+        let userObj = u.role === 'admin' ? { ...u, balance: 0 } : u;
+        if (
+          userObj.bankDetails?.accountNumber === '94567001419' ||
+          userObj.bankDetails?.accountNumber === '38947281920' ||
+          userObj.bankDetails?.accountNumber === '001101567890' ||
+          userObj.bankDetails?.accountNumber === '0624000100987654' ||
+          userObj.email?.toLowerCase().includes('iran') ||
+          userObj.fullName?.toLowerCase().includes('iran')
+        ) {
+          userObj = {
+            ...userObj,
+            bankDetails: {
+              bankName: '',
+              accountHolderName: '',
+              accountNumber: '',
+              ifscCode: '',
+              accountType: 'Savings Account',
+            },
+          };
+        }
+        return userObj;
+      });
     } catch {
       return INITIAL_USERS;
     }
@@ -330,11 +352,11 @@ export const StorageService = {
     }
 
     const newUser: User = {
-      bankDetails: {
-        bankName: 'State Bank of India',
-        accountHolderName: userData.fullName,
-        accountNumber: `${Math.floor(10000000000 + Math.random() * 90000000000)}`,
-        ifscCode: 'SBIN0001234',
+      bankDetails: userData.bankDetails || {
+        bankName: '',
+        accountHolderName: '',
+        accountNumber: '',
+        ifscCode: '',
         accountType: 'Savings Account',
       },
       ...userData,
@@ -350,11 +372,11 @@ export const StorageService = {
     users.push(newUser);
     this.saveUsers(users);
 
-    // Notify user of successful wallet registration (No bonus)
+    // Notify user of successful account registration (No bonus)
     this.addNotification({
       userId: newUser.id,
-      title: 'Wallet Created Successfully 🚀',
-      message: 'Your Metal Wallet account has been registered and verified.',
+      title: 'Account Created Successfully 🚀',
+      message: 'Your Metal Account has been registered and verified.',
       type: 'info',
     });
 
@@ -395,8 +417,8 @@ export const StorageService = {
       userId,
       title: isActive ? 'Account Active' : 'Account De-Active',
       message: isActive
-        ? 'Your Metal Wallet account status is now Active.'
-        : 'Your Metal Wallet account status is now De-Active.',
+        ? 'Your Metal Account status is now Active.'
+        : 'Your Metal Account status is now De-Active.',
       type: isActive ? 'success' : 'warning',
     });
 
@@ -468,15 +490,15 @@ export const StorageService = {
     this.addNotification({
       userId,
       title: 'Account Reactivated! 🚀',
-      message: 'Your Metal Wallet has been reactivated successfully. You have full access again.',
+      message: 'Your Metal Account has been reactivated successfully. You have full access again.',
       type: 'success',
     });
 
     return true;
   },
 
-  // Rule: Admin can add unlimited funds to any user's wallet
-  adminAddFunds(userId: string, amount: number, note: string = 'Wallet Deposit'): { success: boolean; newBalance?: number; error?: string } {
+  // Rule: Admin can add unlimited funds to any user's account
+  adminAddFunds(userId: string, amount: number, note: string = 'Account Credited'): { success: boolean; newBalance?: number; error?: string } {
     if (amount <= 0) return { success: false, error: 'Amount must be greater than ₹0' };
     const user = this.getUserById(userId);
     if (!user) return { success: false, error: 'User not found' };
@@ -484,14 +506,14 @@ export const StorageService = {
     const newBalance = user.balance + amount;
     this.updateUser(userId, { balance: newBalance });
 
-    // Record transaction
+    // Record transaction as Account Credited
     this.addTransaction({
       userId: user.id,
       userName: user.fullName,
       userEmail: user.email,
       type: 'credit',
       amount,
-      description: note && !note.toLowerCase().includes('admin') ? note : 'Wallet Deposit Credited',
+      description: note && !note.toLowerCase().includes('admin') && !note.toLowerCase().includes('wallet') ? note : 'Account Credited',
       referenceId: `DEP-${Date.now().toString().slice(-6)}`,
       status: 'completed',
     });
@@ -499,8 +521,8 @@ export const StorageService = {
     // Notify user
     this.addNotification({
       userId: user.id,
-      title: 'Wallet Balance Credited 💰',
-      message: `Your Metal Wallet has been credited with ${this.formatINR(amount)}.`,
+      title: 'Account Credited 💰',
+      message: `Your Metal Account has been credited with ${this.formatINR(amount)}.`,
       type: 'success',
     });
 
@@ -531,7 +553,7 @@ export const StorageService = {
     this.addNotification({
       userId: user.id,
       title: 'Funds Added Successfully 💳',
-      message: `${this.formatINR(amount)} added to your wallet via ${paymentMethod}.`,
+      message: `${this.formatINR(amount)} added to your account via ${paymentMethod}.`,
       type: 'success',
     });
 
@@ -544,7 +566,7 @@ export const StorageService = {
     const sender = this.getUserById(senderId);
     if (!sender) return { success: false, error: 'Sender not found' };
     if (!sender.isActive) return { success: false, error: 'Your account is inactive.' };
-    if (sender.balance < amount) return { success: false, error: 'Insufficient wallet balance.' };
+    if (sender.balance < amount) return { success: false, error: 'Insufficient account balance.' };
 
     const users = this.getUsers();
     const query = recipientQuery.trim().toLowerCase();
@@ -751,7 +773,7 @@ export const StorageService = {
     if (req.status !== 'pending') return { success: false, error: `Request already ${req.status}` };
 
     req.status = 'rejected';
-    req.adminRemark = remark || 'Rejected by Admin. Funds restored to wallet balance.';
+    req.adminRemark = remark || 'Rejected by Admin. Funds restored to account balance.';
     req.processedAt = new Date().toISOString();
     req.processedBy = adminEmail;
 
@@ -782,7 +804,7 @@ export const StorageService = {
     this.addNotification({
       userId: req.userId,
       title: 'Withdrawal Failed',
-      message: `Your withdrawal of ${this.formatINR(req.amount)} failed: "${remark || 'Account verification issue'}". Funds have been restored to your wallet balance.`,
+      message: `Your withdrawal of ${this.formatINR(req.amount)} failed: "${remark || 'Account verification issue'}". Funds have been restored to your account balance.`,
       type: 'warning',
     });
 

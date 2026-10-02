@@ -104,7 +104,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold font-heading text-white">Sign In to Metal Wallet</h2>
+          <h2 className="text-2xl font-bold font-heading text-white">Sign In to Metal Account</h2>
           <p className="text-xs text-slate-400 mt-1">
             Access your secure simulated INR balance & banking terminal
           </p>

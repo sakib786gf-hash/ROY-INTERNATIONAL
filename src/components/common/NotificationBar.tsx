@@ -15,6 +15,8 @@ function cleanNotificationText(text: string): string {
     .replace(/approved\s*by\s*admin/gi, 'Approved')
     .replace(/by\s*admin/gi, '')
     .replace(/admin/gi, '')
+    .replace(/wallet/gi, 'Account')
+    .replace(/টয়লেট/gi, 'Account')
     .replace(/এডমিন/gi, '')
     .replace(/\s{2,}/g, ' ')
     .trim();

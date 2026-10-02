@@ -20,7 +20,7 @@ export const SendMoneyModal: React.FC<SendMoneyModalProps> = ({
 }) => {
   const [recipientQuery, setRecipientQuery] = useState('');
   const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('Payment via Metal Wallet');
+  const [note, setNote] = useState('Payment via Metal Account');
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
 
@@ -79,7 +79,7 @@ export const SendMoneyModal: React.FC<SendMoneyModalProps> = ({
           </div>
           <h2 className="text-xl font-bold font-heading text-white">Send Money Instantly</h2>
           <p className="text-xs text-slate-400">
-            Transfer to any registered Metal Wallet user in ₹ INR
+            Transfer to any registered Metal Account user in ₹ INR
           </p>
         </div>
 

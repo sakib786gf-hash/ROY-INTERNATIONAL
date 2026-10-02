@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Wallet, User as UserIcon, Lock, ArrowRight, ShieldCheck, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, ShieldCheck, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { StorageService, DEFAULT_ADMIN } from '../../services/storage';
 import { User } from '../../types';
 
 interface AuthPageProps {
   onSuccess: (user: User) => void;
-  onOpenRegister: () => void;
+  onOpenRegister?: () => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onOpenRegister }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -96,10 +96,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onOpenRegister })
       {/* Exact card layout matching Screenshot_20260927_223000.jpg */}
       <div className="w-full max-w-md bg-[#0a0f18]/95 border border-slate-800/90 rounded-[32px] p-7 sm:p-9 shadow-2xl backdrop-blur-xl relative">
         
-        {/* Top Wallet Icon in square dark box */}
+        {/* Top Account Icon in square dark box */}
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-[#0e1626] border border-slate-700/60 flex items-center justify-center shadow-lg shadow-black/40">
-            <Wallet className="w-7 h-7 text-white" />
+            <ShieldCheck className="w-7 h-7 text-[#65ff00]" />
           </div>
         </div>
 
@@ -109,10 +109,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onOpenRegister })
             METAL • SPACE
           </p>
           <h1 className="text-3xl sm:text-4xl font-serif text-white font-normal tracking-tight">
-            Wallet login
+            Account login
           </h1>
           <p className="text-xs text-slate-400 mt-2">
-            Enter your wallet credentials to continue.
+            Enter your account credentials to continue.
           </p>
         </div>
 
@@ -137,7 +137,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onOpenRegister })
                 className="mt-1 w-full py-1.5 rounded-lg bg-[#65ff00] text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Reactivate Wallet Now
+                Reactivate Account Now
               </button>
             )}
           </div>
@@ -185,29 +185,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onOpenRegister })
             </div>
           </div>
 
-          {/* Big Neon Green Button: Open Wallet → */}
+          {/* Big Neon Green Button: Open Account → */}
           <button
             type="submit"
             className="w-full mt-3 py-3.5 px-4 rounded-2xl bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold text-sm shadow-xl shadow-[#65ff00]/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
           >
-            <span>Open Wallet</span>
+            <span>Open Account</span>
             <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
-
-        {/* Footer Registration Link */}
-        <div className="mt-6 text-center pt-4 border-t border-slate-800/80">
-          <p className="text-xs text-slate-400">
-            Need an Indian KYC account?{' '}
-            <button
-              type="button"
-              onClick={onOpenRegister}
-              className="text-[#65ff00] hover:underline font-semibold cursor-pointer ml-1"
-            >
-              Create New Wallet
-            </button>
-          </p>
-        </div>
       </div>
     </div>
   );

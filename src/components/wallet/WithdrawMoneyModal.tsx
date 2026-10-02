@@ -26,14 +26,15 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
   onSuccess,
 }) => {
   const [amount, setAmount] = useState<string>('5000');
-  const [isEditingBank, setIsEditingBank] = useState(!currentUser.bankDetails?.accountNumber);
+  const hasExistingBank = Boolean(currentUser.bankDetails?.accountNumber?.trim());
+  const [isEditingBank, setIsEditingBank] = useState(!hasExistingBank);
 
-  // Bank details state pre-filled from user's profile
+  // Bank details state: BLANK unless user has explicitly saved them
   const [bankDetails, setBankDetails] = useState<BankDetails>({
-    bankName: currentUser.bankDetails?.bankName || 'State Bank of India',
-    accountHolderName: currentUser.bankDetails?.accountHolderName || currentUser.fullName,
+    bankName: currentUser.bankDetails?.bankName || '',
+    accountHolderName: currentUser.bankDetails?.accountHolderName || '',
     accountNumber: currentUser.bankDetails?.accountNumber || '',
-    ifscCode: currentUser.bankDetails?.ifscCode || 'SBIN0001234',
+    ifscCode: currentUser.bankDetails?.ifscCode || '',
     accountType: currentUser.bankDetails?.accountType || 'Savings Account',
   });
 
@@ -138,7 +139,7 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
           {/* Balance Preview */}
           <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Available Wallet Balance:</span>
+            <span className="text-xs text-slate-400">Available Account Balance:</span>
             <span className="text-sm font-bold font-mono text-cyan-300">
               {StorageService.formatINR(currentUser.balance)}
             </span>
@@ -219,7 +220,8 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
                     required
                     value={bankDetails.bankName}
                     onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                    placeholder="Enter bank name (e.g. State Bank of India)"
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none placeholder-slate-600"
                   />
                 </div>
                 <div>
@@ -229,7 +231,8 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
                     required
                     value={bankDetails.accountHolderName}
                     onChange={(e) => setBankDetails({ ...bankDetails, accountHolderName: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                    placeholder="Enter account holder name"
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none placeholder-slate-600"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -240,7 +243,8 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
                       required
                       value={bankDetails.accountNumber}
                       onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
-                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono outline-none"
+                      placeholder="Enter account number"
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono outline-none placeholder-slate-600"
                     />
                   </div>
                   <div>
@@ -250,7 +254,8 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
                       required
                       value={bankDetails.ifscCode}
                       onChange={(e) => setBankDetails({ ...bankDetails, ifscCode: e.target.value.toUpperCase() })}
-                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono uppercase outline-none"
+                      placeholder="e.g. SBIN0001234"
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono uppercase outline-none placeholder-slate-600"
                     />
                   </div>
                 </div>
@@ -259,11 +264,11 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <p className="text-slate-500 text-[10px]">Bank Name</p>
-                  <p className="font-semibold text-slate-200">{bankDetails.bankName}</p>
+                  <p className="font-semibold text-slate-200">{bankDetails.bankName || 'Not set'}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 text-[10px]">Account Holder</p>
-                  <p className="font-semibold text-slate-200 truncate">{bankDetails.accountHolderName}</p>
+                  <p className="font-semibold text-slate-200 truncate">{bankDetails.accountHolderName || 'Not set'}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 text-[10px]">Account Number</p>
@@ -273,12 +278,12 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
                 </div>
                 <div>
                   <p className="text-slate-500 text-[10px]">IFSC Code</p>
-                  <p className="font-mono text-cyan-300 font-semibold">{bankDetails.ifscCode}</p>
+                  <p className="font-mono text-cyan-300 font-semibold">{bankDetails.ifscCode || 'Not set'}</p>
                 </div>
                 <div className="col-span-2 pt-1 border-t border-slate-800/80 flex items-center justify-between">
                   <span className="text-slate-500 text-[10px]">Account Type:</span>
                   <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium text-[11px]">
-                    {bankDetails.accountType}
+                    {bankDetails.accountType || 'Savings Account'}
                   </span>
                 </div>
               </div>
@@ -291,11 +296,11 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
-              <span>Submitting Request...</span>
+              <span>Submitting...</span>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Submit Withdrawal Request ({StorageService.formatINR(parseFloat(amount) || 0)})</span>
+                <span>Submit ({StorageService.formatINR(parseFloat(amount) || 0)})</span>
               </>
             )}
           </button>

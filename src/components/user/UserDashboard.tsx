@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Wallet,
   Key,
   RotateCw,
   History as HistoryIcon,
@@ -21,24 +20,46 @@ import { User, Transaction, WithdrawalRequest } from '../../types';
 import { StorageService } from '../../services/storage';
 import { numberToIndianWords } from '../../utils/numberToWords';
 
-// Clean user-facing text to ensure no admin terms appear anywhere in user portal
+// Helper to mask Aadhaar: show only the last 4 digits (e.g. ********5647)
+function maskAadhaar(aadhaar: string): string {
+  if (!aadhaar) return '••••••••••••';
+  const clean = aadhaar.replace(/\D/g, '');
+  if (clean.length < 4) return '••••••••••••';
+  const last4 = clean.slice(-4);
+  return `********${last4}`;
+}
+
+// Helper to mask PAN: show only the last 4 digits (e.g. ******1234)
+function maskPan(pan: string): string {
+  if (!pan) return '••••••••••';
+  const clean = pan.trim().replace(/\s/g, '');
+  if (clean.length < 4) return '••••••••••';
+  const last4 = clean.slice(-4);
+  return `******${last4}`;
+}
+
+// Clean user-facing text to ensure no admin terms or wallet terms appear anywhere in user portal
 function sanitizeUserText(text: string): string {
   if (!text) return '';
   return text
     .replace(/admin\s*app\s*group/gi, 'Direct Transfer')
-    .replace(/admin\s*add\s*money/gi, 'Wallet Deposit')
-    .replace(/admin\s*add\s*funds/gi, 'Wallet Deposit')
-    .replace(/admin\s*deposit/gi, 'Wallet Deposit')
+    .replace(/admin\s*add\s*money/gi, 'Account Credited')
+    .replace(/admin\s*add\s*funds/gi, 'Account Credited')
+    .replace(/admin\s*deposit/gi, 'Account Credited')
+    .replace(/wallet\s*deposit/gi, 'Account Credited')
+    .replace(/wallet\s*credit/gi, 'Account Credited')
+    .replace(/deposit\s*credited/gi, 'Account Credited')
     .replace(/admin\s*approve[d]?/gi, 'Completed')
     .replace(/admin\s*approval/gi, 'Completed')
     .replace(/admin\s*admit/gi, 'Completed')
     .replace(/pending\s*admit/gi, 'Completed')
     .replace(/admin\s*inactive/gi, 'Inactive')
     .replace(/admin\s*de-?active/gi, 'Inactive')
-    .replace(/admin\s*bonus\s*top-up/gi, 'Bonus Deposit')
-    .replace(/admin\s*top-up\s*grant/gi, 'Wallet Credit')
-    .replace(/admin\s*balance\s*top-up/gi, 'Wallet Credit')
-    .replace(/admin\s*grant/gi, 'Wallet Credit')
+    .replace(/admin\s*bonus\s*top-up/gi, 'Account Credited')
+    .replace(/bonus\s*deposit/gi, 'Account Credited')
+    .replace(/admin\s*top-up\s*grant/gi, 'Account Credited')
+    .replace(/admin\s*balance\s*top-up/gi, 'Account Credited')
+    .replace(/admin\s*grant/gi, 'Account Credited')
     .replace(/pending\s*admin\s*approval/gi, 'Processing')
     .replace(/pending\s*admin\s*review/gi, 'Processing')
     .replace(/money\s*pending\s*approve[d]?/gi, 'Pending')
@@ -48,6 +69,8 @@ function sanitizeUserText(text: string): string {
     .replace(/person\s*to\s*person/gi, 'Transfer')
     .replace(/send\s*money/gi, 'Transfer')
     .replace(/p2p/gi, 'Transfer')
+    .replace(/wallet/gi, 'Account')
+    .replace(/টয়লেট/gi, 'Account')
     .replace(/by\s*admin/gi, '')
     .replace(/admin/gi, '')
     .trim();
@@ -123,7 +146,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     );
   };
 
-  // Helper for rendering clear transaction descriptions
+  // Helper for rendering clear transaction descriptions (single standard banking term)
   const getTransactionTitle = (tx: Transaction) => {
     if (tx.type === 'withdrawal') {
       if (tx.status === 'completed') {
@@ -132,11 +155,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       if (tx.status === 'failed' || tx.status === 'refunded') {
         return 'Withdrawal Failed';
       }
-      if (tx.status === 'pending') {
-        return sanitizeUserText(tx.description) || 'Bank Withdrawal';
-      }
+      return 'Bank Withdrawal';
     }
-    return sanitizeUserText(tx.description);
+    if (tx.type === 'credit' || tx.type === 'transfer_in' || tx.type === 'admin_grant') {
+      return 'Account Credited';
+    }
+    return sanitizeUserText(tx.description) || 'Account Credited';
   };
 
   const handleChangePinSubmit = (e: React.FormEvent) => {
@@ -226,7 +250,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
         {/* Amount in words */}
         <p className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-400 tracking-wide mb-4">
-          WALLET AMOUNT IN WORDS: {numberToIndianWords(currentUser.balance)}
+          ACCOUNT BALANCE IN WORDS: {numberToIndianWords(currentUser.balance)}
         </p>
 
         {/* Badges row: SECURED and METAL (No User Add Money Button) */}
@@ -313,7 +337,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           onClick={handleWithdrawClick}
           className="bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold rounded-[20px] py-3.5 px-1 flex flex-col items-center justify-center gap-1.5 text-xs shadow-lg shadow-[#65ff00]/20 cursor-pointer transition-transform active:scale-95"
         >
-          <Wallet className="w-5 h-5 stroke-[2.2]" />
+          <Building2 className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[11px] font-bold leading-tight">Withdraw</span>
         </button>
 
@@ -411,7 +435,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           <div className="w-full max-w-xs bg-[#0a0f18] border border-slate-800 rounded-3xl p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <Key className="w-5 h-5 text-[#65ff00]" />
-              Change Wallet PIN
+              Change Account PIN
             </h3>
             <p className="text-xs text-slate-400 mb-4">
               Enter your new 4-digit simulated transaction PIN.
@@ -483,24 +507,32 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </div>
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">Aadhaar (12 Digits):</span>
-                <span className="font-mono font-bold text-cyan-300">{currentUser.aadhaarNumber}</span>
+                <span className="font-mono font-bold text-cyan-300">{maskAadhaar(currentUser.aadhaarNumber)}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">PAN Number:</span>
-                <span className="font-mono font-bold text-amber-300 uppercase">{currentUser.panNumber}</span>
+                <span className="font-mono font-bold text-amber-300 uppercase">{maskPan(currentUser.panNumber)}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">Bank Details (Withdrawal):</span>
-                <span className="font-semibold text-white">{currentUser.bankDetails.bankName}</span>
-                <span className="block text-[11px] text-slate-300 mt-0.5">
-                  Holder: {currentUser.bankDetails.accountHolderName}
-                </span>
-                <span className="block text-[11px] text-slate-400 font-mono mt-0.5">
-                  A/C: {currentUser.bankDetails.accountNumber} • IFSC: {currentUser.bankDetails.ifscCode}
-                </span>
-                <span className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono">
-                  {currentUser.bankDetails.accountType}
-                </span>
+                {currentUser.bankDetails?.accountNumber ? (
+                  <>
+                    <span className="font-semibold text-white">{currentUser.bankDetails.bankName || 'Linked Bank'}</span>
+                    <span className="block text-[11px] text-slate-300 mt-0.5">
+                      Holder: {currentUser.bankDetails.accountHolderName}
+                    </span>
+                    <span className="block text-[11px] text-slate-400 font-mono mt-0.5">
+                      A/C: ••••••••{currentUser.bankDetails.accountNumber.slice(-4)} • IFSC: {currentUser.bankDetails.ifscCode}
+                    </span>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-mono">
+                      {currentUser.bankDetails.accountType || 'Savings Account'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 text-xs italic">
+                    No bank details linked yet. You can enter them during withdrawal.
+                  </span>
+                )}
               </div>
             </div>
 

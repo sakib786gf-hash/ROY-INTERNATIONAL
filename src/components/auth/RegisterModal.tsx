@@ -20,7 +20,8 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (user: User) => void;
-  onSwitchToLogin: () => void;
+  onSwitchToLogin?: () => void;
+  isAdmin?: boolean;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -28,6 +29,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onClose,
   onSuccess,
   onSwitchToLogin,
+  isAdmin = false,
 }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -114,9 +116,18 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     if (result.user) {
-      StorageService.setCurrentUserId(result.user.id);
+      if (!isAdmin) {
+        StorageService.setCurrentUserId(result.user.id);
+      }
       onSuccess(result.user);
       onClose();
+      setFullName('');
+      setEmail('');
+      setPhone('');
+      setPassword('');
+      setConfirmPassword('');
+      setAadhaarNumber('');
+      setPanNumber('');
     }
   };
 
@@ -132,7 +143,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold font-heading text-white">Create Metal Wallet</h2>
+          <h2 className="text-2xl font-bold font-heading text-white">
+            {isAdmin ? 'Register New User (Admin Portal)' : 'Register User Account'}
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            {isAdmin
+              ? 'Admin registers and authorizes new user for ID & Password login'
+              : 'Enter KYC and credential details to create account'}
+          </p>
         </div>
 
         {error && (
@@ -338,26 +356,28 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             type="submit"
             className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold text-sm shadow-lg shadow-[#65ff00]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
           >
-            <span>Create Wallet</span>
+            <span>{isAdmin ? 'Register & Authorize User' : 'Create Account'}</span>
             <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
 
-        <div className="mt-5 text-center pt-4 border-t border-slate-800">
-          <p className="text-xs text-slate-400">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onSwitchToLogin();
-              }}
-              className="text-[#65ff00] hover:underline font-semibold cursor-pointer ml-1"
-            >
-              Sign In
-            </button>
-          </p>
-        </div>
+        {!isAdmin && onSwitchToLogin && (
+          <div className="mt-5 text-center pt-4 border-t border-slate-800">
+            <p className="text-xs text-slate-400">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onSwitchToLogin();
+                }}
+                className="text-[#65ff00] hover:underline font-semibold cursor-pointer ml-1"
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

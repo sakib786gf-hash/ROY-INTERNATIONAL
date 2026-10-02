@@ -6,7 +6,6 @@ import {
   LogOut,
   ChevronDown,
   RefreshCw,
-  Wallet,
   Sparkles,
   User as UserIcon,
   CreditCard
@@ -45,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-3">
           <div className="relative group flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-sky-600 to-indigo-700 p-0.5 shadow-lg shadow-cyan-500/20">
             <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <ShieldCheck className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
             </div>
             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -57,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-1.5">
               <span className="font-heading text-lg sm:text-xl font-bold tracking-tight text-white flex items-center">
                 METAL
-                <span className="text-cyan-400 font-extrabold ml-1">WALLET</span>
+                <span className="text-cyan-400 font-extrabold ml-1">ACCOUNT</span>
               </span>
               <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800 text-slate-300 border border-slate-700">
                 ₹ INR
@@ -65,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <span className="text-[10px] text-slate-400 font-mono tracking-wider flex items-center gap-1">
               <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-              SIMULATED INDIA WALLET
+              SIMULATED INDIA ACCOUNT
             </span>
           </div>
         </div>
@@ -150,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="mt-2 flex items-center justify-between text-xs pt-2 border-t border-slate-800/60">
                     <span className="text-slate-400">Account Type:</span>
                     <span className="font-bold text-white font-mono">
-                      {currentUser.role === 'admin' ? 'System Administrator (No Wallet)' : StorageService.formatINR(currentUser.balance)}
+                      {currentUser.role === 'admin' ? 'System Administrator (No Personal Account)' : StorageService.formatINR(currentUser.balance)}
                     </span>
                   </div>
                 </div>

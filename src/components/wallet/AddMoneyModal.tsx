@@ -79,7 +79,7 @@ export const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold font-heading text-white">Add Funds to Metal Wallet</h2>
+          <h2 className="text-xl font-bold font-heading text-white">Add Funds to Metal Account</h2>
           <p className="text-xs text-slate-400 mt-1">
             Simulated Indian UPI / Netbanking Gateway (Zero Fees)
           </p>
