@@ -1,0 +1,6 @@
+{
+  "name": "Metal Wallet - India Simulated Digital Wallet",
+  "description": "Premium metallic digital wallet simulator with INR currency, admin controls, KYC registration, withdrawal approvals, and space-grade security.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
