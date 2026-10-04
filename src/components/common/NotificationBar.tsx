@@ -36,8 +36,51 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [showTopTicker, setShowTopTicker] = useState(true);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const latestNotification = notifications[0];
+  // Filter according to user request:
+  // - No account creation / welcome message at the bottom or anywhere
+  // - No active / de-active / inactive alerts on top ticker or in notification drawer
+  // - Only messages for Add Money, Withdrawal (successful / status), and Admin broadcasts
+  const validNotifications = notifications.filter((n) => {
+    const text = `${n.title} ${n.message}`.toLowerCase();
+
+    // Never show active/de-active or account creation/welcome alerts
+    if (
+      text.includes('de-active') ||
+      text.includes('deactive') ||
+      text.includes('inactive') ||
+      text.includes('account active') ||
+      text.includes('welcome') ||
+      text.includes('created') ||
+      text.includes('register') ||
+      text.includes('status is now') ||
+      text.includes('reactivated') ||
+      text.includes('kyc')
+    ) {
+      return false;
+    }
+
+    // Only allow Add Money / Credit, Withdrawal, or Admin alerts
+    const isAddMoney =
+      text.includes('credit') ||
+      text.includes('funds added') ||
+      text.includes('add money') ||
+      text.includes('deposit');
+    const isWithdrawal =
+      text.includes('withdrawal') ||
+      text.includes('withdraw') ||
+      text.includes('settled') ||
+      text.includes('utr');
+    const isAdminAlert =
+      n.type === 'alert' ||
+      text.includes('notice') ||
+      text.includes('announcement') ||
+      text.includes('metal');
+
+    return isAddMoney || isWithdrawal || isAdminAlert;
+  });
+
+  const unreadCount = validNotifications.filter((n) => !n.isRead).length;
+  const latestNotification = validNotifications[0];
 
   const handleMarkAllRead = () => {
     StorageService.markAllNotificationsAsRead(currentUserId);
@@ -83,7 +126,7 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({
               onClick={() => setIsOpen(true)}
               className="text-cyan-400 hover:text-cyan-300 font-medium underline flex items-center gap-0.5 text-[11px] cursor-pointer"
             >
-              View All ({notifications.length})
+              View All ({validNotifications.length})
               <ChevronRight className="w-3 h-3" />
             </button>
             <button
@@ -136,13 +179,13 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({
 
             {/* List */}
             <div className="max-h-[70vh] overflow-y-auto divide-y divide-slate-800/60">
-              {notifications.length === 0 ? (
+              {validNotifications.length === 0 ? (
                 <div className="py-12 text-center text-slate-400">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
                   <p className="text-sm">No notifications yet</p>
                 </div>
               ) : (
-                notifications.map((item) => (
+                validNotifications.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => handleMarkSingleRead(item.id)}

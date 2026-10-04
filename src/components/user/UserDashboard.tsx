@@ -53,8 +53,10 @@ function sanitizeUserText(text: string): string {
     .replace(/admin\s*approval/gi, 'Completed')
     .replace(/admin\s*admit/gi, 'Completed')
     .replace(/pending\s*admit/gi, 'Completed')
-    .replace(/admin\s*inactive/gi, 'Inactive')
-    .replace(/admin\s*de-?active/gi, 'Inactive')
+    .replace(/admin\s*inactive/gi, '')
+    .replace(/admin\s*de-?active/gi, '')
+    .replace(/inactive/gi, '')
+    .replace(/de-?active/gi, '')
     .replace(/admin\s*bonus\s*top-up/gi, 'Account Credited')
     .replace(/bonus\s*deposit/gi, 'Account Credited')
     .replace(/admin\s*top-up\s*grant/gi, 'Account Credited')
@@ -238,7 +240,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase font-mono">
             TOTAL BALANCE
           </span>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold border border-[#65ff00] text-[#65ff00]">
+          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors ${
+            isActive
+              ? 'border-[#65ff00] text-[#65ff00]'
+              : 'border-rose-500 text-rose-500 bg-rose-500/10'
+          }`}>
             LIVE
           </span>
         </div>
@@ -260,8 +266,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             <span>SECURED</span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#65ff00] text-black text-xs font-bold shadow-md shadow-[#65ff00]/15">
-            <span className="w-2 h-2 rounded-full bg-black" />
+          <div className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold shadow-md transition-colors ${
+            isActive
+              ? 'bg-[#65ff00] text-black shadow-[#65ff00]/15'
+              : 'bg-rose-500 text-white shadow-rose-500/20'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-black' : 'bg-white'}`} />
             <span>METAL</span>
           </div>
         </div>
@@ -332,10 +342,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
       {/* ACTION BUTTONS GRID MATCHING SCREENSHOT */}
       <div className="grid grid-cols-5 gap-2 mb-3">
-        {/* 1. Withdraw (Vibrant Lime Green active button) */}
+        {/* 1. Withdraw (Vibrant Lime Green active button, turns Red when inactive) */}
         <button
           onClick={handleWithdrawClick}
-          className="bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold rounded-[20px] py-3.5 px-1 flex flex-col items-center justify-center gap-1.5 text-xs shadow-lg shadow-[#65ff00]/20 cursor-pointer transition-transform active:scale-95"
+          className={`font-extrabold rounded-[20px] py-3.5 px-1 flex flex-col items-center justify-center gap-1.5 text-xs shadow-lg cursor-pointer transition-all active:scale-95 ${
+            isActive
+              ? 'bg-[#65ff00] hover:bg-[#57de00] text-black shadow-[#65ff00]/20'
+              : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/25'
+          }`}
         >
           <Building2 className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[11px] font-bold leading-tight">Withdraw</span>
@@ -478,14 +492,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         </div>
       )}
 
-      {/* USER ACCOUNT DOSSIER MODAL - ONLY USER'S OWN DETAILS (Rule 5: No active/inactive toggle in profile) */}
+      {/* USER ACCOUNT DOSSIER MODAL - ONLY USER'S OWN DETAILS */}
       {activeBottomTab === 'profile' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
           <div className="w-full max-w-sm bg-[#0a0f18] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 my-6">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="font-bold text-white text-base">Account Details</h3>
-                <p className="text-[11px] text-slate-400">Personal & Linked Bank Details</p>
               </div>
               <button
                 onClick={() => setActiveBottomTab('home')}
@@ -514,7 +527,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <span className="font-mono font-bold text-amber-300 uppercase">{maskPan(currentUser.panNumber)}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">Bank Details (Withdrawal):</span>
+                <span className="text-slate-500 text-[10px] block">Bank Details:</span>
                 {currentUser.bankDetails?.accountNumber ? (
                   <>
                     <span className="font-semibold text-white">{currentUser.bankDetails.bankName || 'Linked Bank'}</span>
@@ -529,9 +542,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     </span>
                   </>
                 ) : (
-                  <span className="text-slate-500 text-xs italic">
-                    No bank details linked yet. You can enter them during withdrawal.
-                  </span>
+                  <span className="text-slate-400 text-xs">—</span>
                 )}
               </div>
             </div>
@@ -615,7 +626,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         <button
           onClick={() => setActiveBottomTab('home')}
           className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors ${
-            activeBottomTab === 'home' ? 'text-[#65ff00]' : 'text-slate-500 hover:text-slate-300'
+            activeBottomTab === 'home'
+              ? (isActive ? 'text-[#65ff00]' : 'text-rose-500')
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Home className="w-5 h-5" />
@@ -629,7 +642,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             onRefreshData();
           }}
           className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors ${
-            activeBottomTab === 'history' ? 'text-[#65ff00]' : 'text-slate-500 hover:text-slate-300'
+            activeBottomTab === 'history'
+              ? (isActive ? 'text-[#65ff00]' : 'text-rose-500')
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <HistoryIcon className="w-5 h-5" />
@@ -643,7 +658,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             onOpenNotifications();
           }}
           className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors relative ${
-            activeBottomTab === 'notice' ? 'text-[#65ff00]' : 'text-slate-500 hover:text-slate-300'
+            activeBottomTab === 'notice'
+              ? (isActive ? 'text-[#65ff00]' : 'text-rose-500')
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Bell className="w-5 h-5" />
@@ -657,7 +674,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             alert(`Support Desk: Contact Help Center at support@metal.space or call +91 98321 00786`);
           }}
           className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors ${
-            activeBottomTab === 'gmail' ? 'text-[#65ff00]' : 'text-slate-500 hover:text-slate-300'
+            activeBottomTab === 'gmail'
+              ? (isActive ? 'text-[#65ff00]' : 'text-rose-500')
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <Mail className="w-5 h-5" />
@@ -668,7 +687,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         <button
           onClick={() => setActiveBottomTab('profile')}
           className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors ${
-            activeBottomTab === 'profile' ? 'text-[#65ff00]' : 'text-slate-500 hover:text-slate-300'
+            activeBottomTab === 'profile'
+              ? (isActive ? 'text-[#65ff00]' : 'text-rose-500')
+              : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           <UserIcon className="w-5 h-5" />
@@ -676,7 +697,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         </button>
       </nav>
 
-      {/* BLOCKED / INACTIVE WITHDRAWAL NOTICE MODAL */}
+      {/* UNAVAILABLE WITHDRAWAL NOTICE MODAL */}
       {showBlockedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
           <div className="w-full max-w-sm bg-[#0c121e] border border-rose-500/50 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
@@ -686,10 +707,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">
-                ID Inactive
+                Withdrawal Unavailable
               </h3>
               <p className="text-xs text-slate-300 mt-2">
-                Withdrawals cannot be processed because this account ID is currently inactive.
+                Withdrawal service is currently unavailable for this account. Please reach out to customer support desk for assistance.
               </p>
             </div>
 

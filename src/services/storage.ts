@@ -231,15 +231,6 @@ const INITIAL_WITHDRAWALS: WithdrawalRequest[] = [
 
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
-    id: 'notif-1',
-    userId: 'all',
-    title: 'Welcome to Metal Account 🚀',
-    message: 'Experience next-generation metallic digital banking simulator powered by INR & zero transaction fees.',
-    type: 'info',
-    isRead: false,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
     id: 'notif-2',
     userId: 'user-sakib-002',
     title: 'Bank Withdrawal Successful',
@@ -372,14 +363,6 @@ export const StorageService = {
     users.push(newUser);
     this.saveUsers(users);
 
-    // Notify user of successful account registration (No bonus)
-    this.addNotification({
-      userId: newUser.id,
-      title: 'Account Created Successfully 🚀',
-      message: 'Your Metal Account has been registered and verified.',
-      type: 'info',
-    });
-
     // Notify admin
     this.addNotification({
       userId: DEFAULT_ADMIN.id,
@@ -406,22 +389,12 @@ export const StorageService = {
     return users[index];
   },
 
-  // Toggle user active / inactive by Admin
+  // Toggle user active / inactive by Admin (No notification sent to user as requested)
   toggleUserStatus(userId: string, isActive: boolean): boolean {
     const user = this.getUserById(userId);
     if (!user) return false;
 
     this.updateUser(userId, { isActive });
-
-    this.addNotification({
-      userId,
-      title: isActive ? 'Account Active' : 'Account De-Active',
-      message: isActive
-        ? 'Your Metal Account status is now Active.'
-        : 'Your Metal Account status is now De-Active.',
-      type: isActive ? 'success' : 'warning',
-    });
-
     return true;
   },
 
@@ -434,13 +407,6 @@ export const StorageService = {
     this.updateUser(userId, {
       isActive: false,
       isDeleted: true,
-    });
-
-    this.addNotification({
-      userId,
-      title: 'Account Inactivated',
-      message: 'Your account is now inactive. You can reactivate anytime by logging back in.',
-      type: 'warning',
     });
 
     return true;
@@ -485,13 +451,6 @@ export const StorageService = {
     this.updateUser(userId, {
       isActive: true,
       isDeleted: false,
-    });
-
-    this.addNotification({
-      userId,
-      title: 'Account Reactivated! 🚀',
-      message: 'Your Metal Account has been reactivated successfully. You have full access again.',
-      type: 'success',
     });
 
     return true;
@@ -868,10 +827,28 @@ export const StorageService = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
       const list: NotificationItem[] = data ? JSON.parse(data) : INITIAL_NOTIFICATIONS;
-      if (!data) {
-        localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(INITIAL_NOTIFICATIONS));
+
+      // Filter out unwanted system status and welcome notifications
+      const cleaned = list.filter((n) => {
+        const text = `${n.title} ${n.message}`.toLowerCase();
+        if (
+          text.includes('de-active') ||
+          text.includes('inactive') ||
+          text.includes('account active') ||
+          text.includes('welcome') ||
+          text.includes('account created') ||
+          text.includes('status is now')
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      if (data && cleaned.length !== list.length) {
+        localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(cleaned));
       }
-      const filtered = !userId ? list : list.filter((n) => n.userId === 'all' || n.userId === userId);
+
+      const filtered = !userId ? cleaned : cleaned.filter((n) => n.userId === 'all' || n.userId === userId);
       return filtered.map((n) => ({
         ...n,
         title: this.cleanNotificationText(n.title),

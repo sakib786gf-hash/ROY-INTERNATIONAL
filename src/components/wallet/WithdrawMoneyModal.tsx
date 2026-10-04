@@ -50,7 +50,7 @@ export const WithdrawMoneyModal: React.FC<WithdrawMoneyModalProps> = ({
     setError(null);
 
     if (!currentUser.isActive) {
-      return setError('ID Inactive');
+      return setError('Withdrawal service is currently unavailable. Please contact support.');
     }
 
     const num = parseFloat(amount);
