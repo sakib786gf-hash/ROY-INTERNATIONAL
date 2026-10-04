@@ -39,6 +39,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [panNumber, setPanNumber] = useState('');
+  const [initialBalance, setInitialBalance] = useState('0');
   const [photoUrl, setPhotoUrl] = useState(
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80'
   );
@@ -99,6 +100,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     }
 
     const cleanEmail = email.trim().toLowerCase() || `${fullName.toLowerCase().replace(/\s+/g, '')}@metal.in`;
+    const parsedBalance = parseFloat(initialBalance) || 0;
 
     const result = StorageService.registerUser({
       fullName: fullName.trim(),
@@ -108,6 +110,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       aadhaarNumber: aadhaarNumber.trim(),
       panNumber: panNumber.trim(),
       photoUrl,
+      initialBalance: parsedBalance,
     });
 
     if (!result.success) {
@@ -350,6 +353,35 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 />
               </div>
             </div>
+
+            {/* Admin Initial Balance (₹) */}
+            {isAdmin && (
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Initial Wallet Balance (₹ INR)</span>
+                  <span className="text-[10px] text-[#65ff00] font-mono font-bold">
+                    Admin Managed
+                  </span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#65ff00] font-bold font-mono">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={initialBalance}
+                    onChange={(e) => setInitialBalance(e.target.value)}
+                    placeholder="e.g. 5000 (0 for new empty account)"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700 focus:border-[#65ff00] text-xs text-white placeholder-slate-500 outline-none font-mono"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Enter starting balance (e.g. ₹5,000). Leaving 0 opens a clean new account with ₹0 balance.
+                </p>
+              </div>
+            )}
           </div>
 
           <button

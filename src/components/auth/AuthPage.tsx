@@ -173,42 +173,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 4. Special match for ss8910642 / Sakib user:
-    if (cleanInput.includes('8910642') || cleanInput === 'ss8910642') {
-      const ssUser: User = {
-        id: 'user-ss-8910642',
-        fullName: 'Sakib (SS Metal User)',
-        email: 'ss8910642@gmail.com',
-        phone: '+91 89106 42786',
-        password: cleanPassword || 'User@123',
-        aadhaarNumber: '8910 6420 5647',
-        panNumber: 'SSPAN5647M',
-        photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-        role: 'user',
-        balance: 75500,
-        isActive: true,
-        isDeleted: false,
-        bankDetails: {
-          bankName: '',
-          accountHolderName: '',
-          accountNumber: '',
-          ifscCode: '',
-          accountType: 'Savings Account',
-        },
-        createdAt: '2026-02-01T10:00:00.000Z',
-        updatedAt: new Date().toISOString(),
-      };
-
-      allUsers.push(ssUser);
-      StorageService.saveUsers(allUsers);
-      StorageService.setCurrentUserId(ssUser.id);
-      onSuccess(ssUser);
-      return;
-    }
-
-    // 5. User entered an ID on a new phone or PC that isn't yet in this browser's local cache:
-    // As requested: "আইডি পাসওয়ার্ড জানলে যে কোন ডিভাইস ফোন বা পিসিতে লগইন হবে"
-    // Authorize seamlessly without error
+    // 4. User entered a new ID on a phone or PC:
+    // Create a fresh clean user dashboard for this new account with balance 0
     if (cleanInput.length >= 3 && cleanPassword.length >= 3) {
       const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.space`;
       const namePart = email.split('@')[0];
@@ -216,15 +182,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
 
       const newUser: User = {
         id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-        fullName: `${fullName} (Metal User)`,
+        fullName: `${fullName}`,
         email: email,
-        phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : '+91 89106 42786',
+        phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : '+91 98000 00000',
         password: cleanPassword,
-        aadhaarNumber: '8910 6420 ' + Math.floor(1000 + Math.random() * 9000),
+        aadhaarNumber: '8910 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000),
         panNumber: 'SSPAN' + Math.floor(1000 + Math.random() * 9000) + 'M',
         photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`,
         role: 'user',
-        balance: 75500,
+        balance: 0, // Rule: Fresh new account starts with 0 balance
         isActive: true,
         isDeleted: false,
         bankDetails: {
@@ -237,6 +203,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      allUsers.push(newUser);
+      StorageService.saveUsers(allUsers);
+      StorageService.setCurrentUserId(newUser.id);
+      onSuccess(newUser);
+      return;
+    }
 
       allUsers.push(newUser);
       StorageService.saveUsers(allUsers);

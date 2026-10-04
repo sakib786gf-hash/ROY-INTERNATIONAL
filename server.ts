@@ -42,7 +42,7 @@ const INITIAL_USERS = [
     panNumber: 'ABCDE1234F',
     photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 75500,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -65,7 +65,7 @@ const INITIAL_USERS = [
     panNumber: 'SSPAN5647M',
     photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 75500,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -88,7 +88,7 @@ const INITIAL_USERS = [
     panNumber: 'BKZPS4920K',
     photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 142000,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -111,8 +111,8 @@ const INITIAL_USERS = [
     panNumber: 'APZRV9012M',
     photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 12500,
-    isActive: false,
+    balance: 0,
+    isActive: true,
     isDeleted: false,
     bankDetails: {
       bankName: '',
@@ -126,80 +126,7 @@ const INITIAL_USERS = [
   }
 ];
 
-const INITIAL_TRANSACTIONS = [
-  {
-    id: 'tx-1001',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'credit',
-    amount: 50000,
-    description: 'Account Credited',
-    referenceId: 'CR-MET-88921',
-    status: 'completed',
-    createdAt: '2026-02-15T10:15:00.000Z',
-  },
-  {
-    id: 'tx-2001',
-    userId: 'user-ss-8910642',
-    userName: 'Sakib (SS Metal User)',
-    userEmail: 'ss8910642@gmail.com',
-    type: 'credit',
-    amount: 50000,
-    description: 'Account Credited',
-    referenceId: 'CR-MET-89106',
-    status: 'completed',
-    createdAt: '2026-02-15T10:15:00.000Z',
-  },
-  {
-    id: 'tx-2002',
-    userId: 'user-ss-8910642',
-    userName: 'Sakib (SS Metal User)',
-    userEmail: 'ss8910642@gmail.com',
-    type: 'credit',
-    amount: 25500,
-    description: 'Account Credited',
-    referenceId: 'UPI-8910642001',
-    status: 'completed',
-    createdAt: '2026-02-18T14:40:00.000Z',
-  },
-  {
-    id: 'tx-1002',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'credit',
-    amount: 30000,
-    description: 'Account Credited',
-    referenceId: 'UPI-982736184912',
-    status: 'completed',
-    createdAt: '2026-02-18T14:40:00.000Z',
-  },
-  {
-    id: 'tx-1003',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'withdrawal',
-    amount: 4500,
-    description: 'Bank Withdrawal to State Bank of India',
-    referenceId: 'WDR-90218-SBIN',
-    status: 'completed',
-    createdAt: '2026-02-22T16:20:00.000Z',
-  },
-  {
-    id: 'tx-1004',
-    userId: 'user-priya-003',
-    userName: 'Priya Sharma',
-    userEmail: 'priya.s@metal.in',
-    type: 'credit',
-    amount: 150000,
-    description: 'Netbanking simulated instant deposit',
-    referenceId: 'NB-ICICI-771239',
-    status: 'completed',
-    createdAt: '2026-02-25T12:00:00.000Z',
-  }
-];
+const INITIAL_TRANSACTIONS: any[] = [];
 
 const DATA_DIR = path.resolve(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'database.json');
@@ -260,6 +187,17 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json({ limit: '10mb' }));
+
+  // CORS middleware: allow requests from any origin (e.g. Vercel, phones, localhost)
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
 
   // --- API ROUTES FOR PERSISTENT CROSS-DEVICE SYNC ---
 
@@ -455,38 +393,7 @@ async function startServer() {
       return res.json({ success: true, user });
     }
 
-    // 3. If user is ss8910642 or Sakib user not yet in local db, seed from master:
-    if (cleanInput.includes('8910642') || cleanInput === 'ss8910642') {
-      const ssUser = INITIAL_USERS.find((u: any) => u.email.includes('ss8910642')) || {
-        id: 'user-ss-8910642',
-        fullName: 'Sakib (SS Metal User)',
-        email: 'ss8910642@gmail.com',
-        phone: '+91 89106 42786',
-        password: cleanPassword || 'User@123',
-        aadhaarNumber: '8910 6420 5647',
-        panNumber: 'SSPAN5647M',
-        photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-        role: 'user',
-        balance: 75500,
-        isActive: true,
-        isDeleted: false,
-        bankDetails: {
-          bankName: '',
-          accountHolderName: '',
-          accountNumber: '',
-          ifscCode: '',
-          accountType: 'Savings Account',
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      db.users.push(ssUser);
-      saveDatabase(db);
-      return res.json({ success: true, user: ssUser });
-    }
-
-    // 4. Auto-create user if not found so login succeeds seamlessly on any new device
+    // 3. Auto-create user if not found so login succeeds seamlessly on any new device
     const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.space`;
     const namePart = email.split('@')[0];
     const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
@@ -501,7 +408,7 @@ async function startServer() {
       panNumber: 'SSPAN' + Math.floor(1000 + Math.random() * 9000) + 'M',
       photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`,
       role: 'user',
-      balance: 75500,
+      balance: 0, // Rule: New accounts start with fresh 0 balance until Admin adds funds
       isActive: true,
       isDeleted: false,
       bankDetails: {

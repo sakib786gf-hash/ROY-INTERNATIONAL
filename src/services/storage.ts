@@ -55,7 +55,7 @@ const INITIAL_USERS: User[] = [
     panNumber: 'ABCDE1234F',
     photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 75500,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -78,7 +78,7 @@ const INITIAL_USERS: User[] = [
     panNumber: 'SSPAN5647M',
     photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 75500,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -101,7 +101,7 @@ const INITIAL_USERS: User[] = [
     panNumber: 'BKZPS4920K',
     photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 142000,
+    balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
@@ -124,8 +124,8 @@ const INITIAL_USERS: User[] = [
     panNumber: 'APZRV9012M',
     photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
     role: 'user',
-    balance: 12500,
-    isActive: false, // Sample inactive user
+    balance: 0,
+    isActive: true,
     isDeleted: false,
     bankDetails: {
       bankName: '',
@@ -139,80 +139,7 @@ const INITIAL_USERS: User[] = [
   }
 ];
 
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1001',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'credit',
-    amount: 50000,
-    description: 'Account Credited',
-    referenceId: 'CR-MET-88921',
-    status: 'completed',
-    createdAt: '2026-02-15T10:15:00.000Z',
-  },
-  {
-    id: 'tx-2001',
-    userId: 'user-ss-8910642',
-    userName: 'Sakib (SS Metal User)',
-    userEmail: 'ss8910642@gmail.com',
-    type: 'credit',
-    amount: 50000,
-    description: 'Account Credited',
-    referenceId: 'CR-MET-89106',
-    status: 'completed',
-    createdAt: '2026-02-15T10:15:00.000Z',
-  },
-  {
-    id: 'tx-2002',
-    userId: 'user-ss-8910642',
-    userName: 'Sakib (SS Metal User)',
-    userEmail: 'ss8910642@gmail.com',
-    type: 'credit',
-    amount: 25500,
-    description: 'Account Credited',
-    referenceId: 'UPI-8910642001',
-    status: 'completed',
-    createdAt: '2026-02-18T14:40:00.000Z',
-  },
-  {
-    id: 'tx-1002',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'credit',
-    amount: 30000,
-    description: 'Account Credited',
-    referenceId: 'UPI-982736184912',
-    status: 'completed',
-    createdAt: '2026-02-18T14:40:00.000Z',
-  },
-  {
-    id: 'tx-1003',
-    userId: 'user-sakib-002',
-    userName: 'Sakib Khan',
-    userEmail: 'sakib786gf@gmail.com',
-    type: 'withdrawal',
-    amount: 4500,
-    description: 'Bank Withdrawal to State Bank of India',
-    referenceId: 'WDR-90218-SBIN',
-    status: 'completed',
-    createdAt: '2026-02-22T16:20:00.000Z',
-  },
-  {
-    id: 'tx-1004',
-    userId: 'user-priya-003',
-    userName: 'Priya Sharma',
-    userEmail: 'priya.s@metal.in',
-    type: 'credit',
-    amount: 150000,
-    description: 'Netbanking simulated instant deposit',
-    referenceId: 'NB-ICICI-771239',
-    status: 'completed',
-    createdAt: '2026-02-25T12:00:00.000Z',
-  }
-];
+const INITIAL_TRANSACTIONS: Transaction[] = [];
 
 const INITIAL_WITHDRAWALS: WithdrawalRequest[] = [
   {
@@ -483,6 +410,7 @@ export const StorageService = {
   registerUser(
     userData: Omit<User, 'id' | 'role' | 'balance' | 'isActive' | 'isDeleted' | 'createdAt' | 'updatedAt' | 'bankDetails'> & {
       bankDetails?: User['bankDetails'];
+      initialBalance?: number;
     }
   ): { success: boolean; user?: User; error?: string } {
     const users = this.getUsers();
@@ -490,6 +418,8 @@ export const StorageService = {
     if (existing) {
       return { success: false, error: 'An account with this email address already exists.' };
     }
+
+    const startBalance = Number(userData.initialBalance) || 0;
 
     const newUser: User = {
       bankDetails: userData.bankDetails || {
@@ -502,7 +432,7 @@ export const StorageService = {
       ...userData,
       id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
       role: 'user',
-      balance: 0, // Rule: Users NEVER receive any bonus money upon registration
+      balance: startBalance,
       isActive: true,
       isDeleted: false,
       createdAt: new Date().toISOString(),
@@ -512,6 +442,20 @@ export const StorageService = {
     users.push(newUser);
     this.saveUsers(users);
     CloudSync.saveUserToServer(newUser).catch(() => {});
+
+    // If Admin assigned initial balance, record transaction specifically for this new user
+    if (startBalance > 0) {
+      this.addTransaction({
+        userId: newUser.id,
+        userName: newUser.fullName,
+        userEmail: newUser.email,
+        type: 'credit',
+        amount: startBalance,
+        description: 'Account Credited',
+        referenceId: `CR-MET-${Date.now().toString().slice(-5)}`,
+        status: 'completed',
+      });
+    }
 
     // Notify admin
     this.addNotification({

@@ -1,5 +1,21 @@
 import { User, Transaction, WithdrawalRequest, NotificationItem } from '../types';
 
+const LIVE_BACKEND_URL = 'https://ais-dev-v45vvaw4cippzoh2lwsvpz-570690035285.asia-southeast1.run.app';
+
+async function smartFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  // Try same-origin relative endpoint first
+  try {
+    const res = await fetch(endpoint, options);
+    if (res.ok) return res;
+  } catch {
+    // network or origin mismatch
+  }
+
+  // Fallback to Cloud Run persistent server (supports Vercel, mobile browsers, different devices)
+  const fullUrl = endpoint.startsWith('http') ? endpoint : `${LIVE_BACKEND_URL}${endpoint}`;
+  return await fetch(fullUrl, options);
+}
+
 export const CloudSync = {
   // Pull latest users and records from server into local state
   async syncFromServer(): Promise<{
@@ -10,7 +26,7 @@ export const CloudSync = {
     notifications?: NotificationItem[];
   }> {
     try {
-      const res = await fetch('/api/sync', {
+      const res = await smartFetch('/api/sync', {
         headers: { 'Content-Type': 'application/json' },
       });
       if (!res.ok) return { success: false };
@@ -34,7 +50,7 @@ export const CloudSync = {
   // Push a newly registered user to the backend server
   async saveUserToServer(user: User): Promise<boolean> {
     try {
-      const res = await fetch('/api/users', {
+      const res = await smartFetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
@@ -57,7 +73,7 @@ export const CloudSync = {
     notifications?: NotificationItem[];
   }): Promise<boolean> {
     try {
-      const res = await fetch('/api/sync', {
+      const res = await smartFetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -71,7 +87,7 @@ export const CloudSync = {
   // Cross-device login verification via server API
   async loginViaServer(userId: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await smartFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, password }),
