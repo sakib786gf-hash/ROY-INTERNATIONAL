@@ -114,6 +114,29 @@
       },
       "createdAt": "2026-02-01T14:30:00.000Z",
       "updatedAt": "2026-02-01T14:30:00.000Z"
+    },
+    {
+      "id": "user-test-999",
+      "fullName": "New Metal Customer",
+      "email": "customer@metal.in",
+      "phone": "+91 99999 88888",
+      "password": "Customer@123",
+      "aadhaarNumber": "1111 2222 3333",
+      "panNumber": "ABCDE9999M",
+      "photoUrl": "https://ui-avatars.com/api/?name=Customer",
+      "role": "user",
+      "balance": 50000,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "HDFC Bank",
+        "accountHolderName": "New Metal Customer",
+        "accountNumber": "5010023456789",
+        "ifscCode": "HDFC0001234",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-10-04T18:10:42.472Z",
+      "updatedAt": "2026-10-04T18:10:42.472Z"
     }
   ],
   "transactions": [
@@ -192,5 +215,5 @@
   ],
   "withdrawals": [],
   "notifications": [],
-  "lastUpdated": "2026-10-04T16:37:45.447Z"
+  "lastUpdated": "2026-10-04T18:10:42.472Z"
 }

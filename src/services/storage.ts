@@ -326,11 +326,22 @@ export const StorageService = {
         parsed = JSON.parse(data);
       }
 
-      // Ensure every user in INITIAL_USERS (especially ss8910642@gmail.com) is present
+      // Ensure every user in INITIAL_USERS (especially ss8910642@gmail.com and admin) is present
       for (const initUser of INITIAL_USERS) {
-        const found = parsed.find((u) => u.email.toLowerCase() === initUser.email.toLowerCase());
-        if (!found) {
+        const foundIdx = parsed.findIndex((u) => u.email.toLowerCase() === initUser.email.toLowerCase());
+        if (foundIdx === -1) {
           parsed.push(initUser);
+        } else {
+          // Keep saved user modifications while ensuring vital fields (password, phone, Aadhaar & PAN) are preserved
+          parsed[foundIdx] = {
+            ...initUser,
+            ...parsed[foundIdx],
+            password: parsed[foundIdx].password || initUser.password,
+            phone: parsed[foundIdx].phone || initUser.phone,
+            aadhaarNumber: parsed[foundIdx].aadhaarNumber || initUser.aadhaarNumber,
+            panNumber: parsed[foundIdx].panNumber || initUser.panNumber,
+            balance: parsed[foundIdx].balance !== undefined ? parsed[foundIdx].balance : initUser.balance,
+          };
         }
       }
 
@@ -375,21 +386,60 @@ export const StorageService = {
   async syncWithServer(): Promise<boolean> {
     try {
       const res = await CloudSync.syncFromServer();
-      if (res.success && Array.isArray(res.users) && res.users.length > 0) {
-        const local = this.getUsers();
+      if (res.success) {
         let changed = false;
-        for (const sUser of res.users) {
-          const idx = local.findIndex((u) => u.id === sUser.id || u.email.toLowerCase() === sUser.email.toLowerCase());
-          if (idx === -1) {
-            local.push(sUser);
-            changed = true;
-          } else {
-            local[idx] = { ...local[idx], ...sUser };
-            changed = true;
+
+        // Sync Users
+        if (Array.isArray(res.users) && res.users.length > 0) {
+          const local = this.getUsers();
+          for (const sUser of res.users) {
+            const idx = local.findIndex((u) => u.id === sUser.id || u.email.toLowerCase() === sUser.email.toLowerCase());
+            if (idx === -1) {
+              local.push(sUser);
+              changed = true;
+            } else {
+              local[idx] = { ...local[idx], ...sUser };
+              changed = true;
+            }
+          }
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(local));
           }
         }
+
+        // Sync Transactions
+        if (Array.isArray(res.transactions) && res.transactions.length > 0) {
+          const localTxs = this.getTransactions();
+          for (const sTx of res.transactions) {
+            if (!localTxs.some((t) => t.id === sTx.id)) {
+              localTxs.unshift(sTx);
+              changed = true;
+            }
+          }
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(localTxs));
+          }
+        }
+
+        // Sync Withdrawals
+        if (Array.isArray(res.withdrawals) && res.withdrawals.length > 0) {
+          const localWdrs = this.getWithdrawals();
+          for (const sWdr of res.withdrawals) {
+            const wIdx = localWdrs.findIndex((w) => w.id === sWdr.id);
+            if (wIdx === -1) {
+              localWdrs.unshift(sWdr);
+              changed = true;
+            } else {
+              localWdrs[wIdx] = sWdr;
+              changed = true;
+            }
+          }
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(localWdrs));
+          }
+        }
+
         if (changed) {
-          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(local));
           dispatchStorageEvent();
         }
         return true;
@@ -713,6 +763,7 @@ export const StorageService = {
   saveWithdrawals(list: WithdrawalRequest[]) {
     localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(list));
     dispatchStorageEvent();
+    CloudSync.pushAllToServer({ withdrawals: list }).catch(() => {});
   },
 
   createWithdrawalRequest(
@@ -887,6 +938,7 @@ export const StorageService = {
   saveTransactions(txs: Transaction[]) {
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(txs));
     dispatchStorageEvent();
+    CloudSync.pushAllToServer({ transactions: txs }).catch(() => {});
   },
 
   addTransaction(txData: Omit<Transaction, 'id' | 'createdAt'>): Transaction {

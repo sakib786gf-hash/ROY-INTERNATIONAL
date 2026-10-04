@@ -2,7 +2,13 @@ import { User, Transaction, WithdrawalRequest, NotificationItem } from '../types
 
 export const CloudSync = {
   // Pull latest users and records from server into local state
-  async syncFromServer(): Promise<{ success: boolean; users?: User[] }> {
+  async syncFromServer(): Promise<{
+    success: boolean;
+    users?: User[];
+    transactions?: Transaction[];
+    withdrawals?: WithdrawalRequest[];
+    notifications?: NotificationItem[];
+  }> {
     try {
       const res = await fetch('/api/sync', {
         headers: { 'Content-Type': 'application/json' },
@@ -10,8 +16,14 @@ export const CloudSync = {
       if (!res.ok) return { success: false };
       const data = await res.json();
 
-      if (data.success && Array.isArray(data.users)) {
-        return { success: true, users: data.users };
+      if (data.success) {
+        return {
+          success: true,
+          users: data.users || [],
+          transactions: data.transactions || [],
+          withdrawals: data.withdrawals || [],
+          notifications: data.notifications || [],
+        };
       }
     } catch {
       // Offline / standalone mode
