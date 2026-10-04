@@ -1,0 +1,196 @@
+{
+  "users": [
+    {
+      "id": "admin-izaz-001",
+      "fullName": "Izaz Metal Admin",
+      "email": "izaz786@metal.com",
+      "phone": "+91 98321 00786",
+      "password": "Izaz@123",
+      "aadhaarNumber": "9988 7766 5544",
+      "panNumber": "IZAZA7860M",
+      "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+      "role": "admin",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "System Banking Gateway",
+        "accountHolderName": "Platform Reserve Desk",
+        "accountNumber": "RBI-NET-0001",
+        "ifscCode": "RBIS0000001",
+        "accountType": "Current Account"
+      },
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "user-sakib-002",
+      "fullName": "Sakib Khan",
+      "email": "sakib786gf@gmail.com",
+      "phone": "+91 98765 43210",
+      "password": "Sakib@123",
+      "aadhaarNumber": "7821 4590 1234",
+      "panNumber": "ABCDE1234F",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 75500,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-01-10T11:20:00.000Z",
+      "updatedAt": "2026-01-10T11:20:00.000Z"
+    },
+    {
+      "id": "user-ss-8910642",
+      "fullName": "Sakib (SS Metal User)",
+      "email": "ss8910642@gmail.com",
+      "phone": "+91 89106 42786",
+      "password": "User@123",
+      "aadhaarNumber": "8910 6420 5647",
+      "panNumber": "SSPAN5647M",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 75500,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "updatedAt": "2026-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "user-priya-003",
+      "fullName": "Priya Sharma",
+      "email": "priya.s@metal.in",
+      "phone": "+91 91234 56789",
+      "password": "Priya@123",
+      "aadhaarNumber": "9832 1045 8821",
+      "panNumber": "BKZPS4920K",
+      "photoUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 142000,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-01-15T09:45:00.000Z",
+      "updatedAt": "2026-01-15T09:45:00.000Z"
+    },
+    {
+      "id": "user-rahul-004",
+      "fullName": "Rahul Varma",
+      "email": "rahul.v@metal.in",
+      "phone": "+91 94567 89012",
+      "password": "Rahul@123",
+      "aadhaarNumber": "4455 6677 8899",
+      "panNumber": "APZRV9012M",
+      "photoUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 12500,
+      "isActive": false,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-02-01T14:30:00.000Z",
+      "updatedAt": "2026-02-01T14:30:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-1001",
+      "userId": "user-sakib-002",
+      "userName": "Sakib Khan",
+      "userEmail": "sakib786gf@gmail.com",
+      "type": "credit",
+      "amount": 50000,
+      "description": "Account Credited",
+      "referenceId": "CR-MET-88921",
+      "status": "completed",
+      "createdAt": "2026-02-15T10:15:00.000Z"
+    },
+    {
+      "id": "tx-2001",
+      "userId": "user-ss-8910642",
+      "userName": "Sakib (SS Metal User)",
+      "userEmail": "ss8910642@gmail.com",
+      "type": "credit",
+      "amount": 50000,
+      "description": "Account Credited",
+      "referenceId": "CR-MET-89106",
+      "status": "completed",
+      "createdAt": "2026-02-15T10:15:00.000Z"
+    },
+    {
+      "id": "tx-2002",
+      "userId": "user-ss-8910642",
+      "userName": "Sakib (SS Metal User)",
+      "userEmail": "ss8910642@gmail.com",
+      "type": "credit",
+      "amount": 25500,
+      "description": "Account Credited",
+      "referenceId": "UPI-8910642001",
+      "status": "completed",
+      "createdAt": "2026-02-18T14:40:00.000Z"
+    },
+    {
+      "id": "tx-1002",
+      "userId": "user-sakib-002",
+      "userName": "Sakib Khan",
+      "userEmail": "sakib786gf@gmail.com",
+      "type": "credit",
+      "amount": 30000,
+      "description": "Account Credited",
+      "referenceId": "UPI-982736184912",
+      "status": "completed",
+      "createdAt": "2026-02-18T14:40:00.000Z"
+    },
+    {
+      "id": "tx-1003",
+      "userId": "user-sakib-002",
+      "userName": "Sakib Khan",
+      "userEmail": "sakib786gf@gmail.com",
+      "type": "withdrawal",
+      "amount": 4500,
+      "description": "Bank Withdrawal to State Bank of India",
+      "referenceId": "WDR-90218-SBIN",
+      "status": "completed",
+      "createdAt": "2026-02-22T16:20:00.000Z"
+    },
+    {
+      "id": "tx-1004",
+      "userId": "user-priya-003",
+      "userName": "Priya Sharma",
+      "userEmail": "priya.s@metal.in",
+      "type": "credit",
+      "amount": 150000,
+      "description": "Netbanking simulated instant deposit",
+      "referenceId": "NB-ICICI-771239",
+      "status": "completed",
+      "createdAt": "2026-02-25T12:00:00.000Z"
+    }
+  ],
+  "withdrawals": [],
+  "notifications": [],
+  "lastUpdated": "2026-10-04T16:37:45.447Z"
+}

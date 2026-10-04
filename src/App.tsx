@@ -50,15 +50,37 @@ export default function App() {
     }
   }, []);
 
-  // Sync listener for storage changes
+  // Sync listener for storage changes and cross-device server sync
   useEffect(() => {
+    // Initial sync with backend server
+    StorageService.syncWithServer().then(() => {
+      refreshAllData();
+    });
+
     const handleDataChanged = () => {
       refreshAllData();
     };
 
+    const handleFocus = () => {
+      StorageService.syncWithServer().then(() => {
+        refreshAllData();
+      });
+    };
+
     window.addEventListener('metal_wallet_data_changed', handleDataChanged);
+    window.addEventListener('focus', handleFocus);
+    
+    // Periodic background sync every 12 seconds
+    const interval = setInterval(() => {
+      StorageService.syncWithServer().then(() => {
+        refreshAllData();
+      });
+    }, 12000);
+
     return () => {
       window.removeEventListener('metal_wallet_data_changed', handleDataChanged);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
     };
   }, [refreshAllData]);
 

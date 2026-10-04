@@ -5,13 +5,14 @@ import {
   NotificationItem,
   PlatformStats
 } from '../types';
+import { CloudSync } from './cloudSync';
 
 const STORAGE_KEYS = {
-  USERS: 'metal_wallet_users_v2',
-  CURRENT_USER_ID: 'metal_wallet_current_user_id_v2',
-  TRANSACTIONS: 'metal_wallet_transactions_v2',
-  WITHDRAWALS: 'metal_wallet_withdrawals_v2',
-  NOTIFICATIONS: 'metal_wallet_notifications_v2',
+  USERS: 'metal_wallet_users_v3',
+  CURRENT_USER_ID: 'metal_wallet_current_user_id_v3',
+  TRANSACTIONS: 'metal_wallet_transactions_v3',
+  WITHDRAWALS: 'metal_wallet_withdrawals_v3',
+  NOTIFICATIONS: 'metal_wallet_notifications_v3',
 };
 
 // Default Admin specified in prompt:
@@ -68,6 +69,29 @@ const INITIAL_USERS: User[] = [
     updatedAt: '2026-01-10T11:20:00.000Z',
   },
   {
+    id: 'user-ss-8910642',
+    fullName: 'Sakib (SS Metal User)',
+    email: 'ss8910642@gmail.com',
+    phone: '+91 89106 42786',
+    password: 'User@123',
+    aadhaarNumber: '8910 6420 5647',
+    panNumber: 'SSPAN5647M',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 75500,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-02-01T10:00:00.000Z',
+    updatedAt: '2026-02-01T10:00:00.000Z',
+  },
+  {
     id: 'user-priya-003',
     fullName: 'Priya Sharma',
     email: 'priya.s@metal.in',
@@ -102,7 +126,7 @@ const INITIAL_USERS: User[] = [
     role: 'user',
     balance: 12500,
     isActive: false, // Sample inactive user
-    isDeleted: true,
+    isDeleted: false,
     bankDetails: {
       bankName: '',
       accountHolderName: '',
@@ -127,6 +151,30 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     referenceId: 'CR-MET-88921',
     status: 'completed',
     createdAt: '2026-02-15T10:15:00.000Z',
+  },
+  {
+    id: 'tx-2001',
+    userId: 'user-ss-8910642',
+    userName: 'Sakib (SS Metal User)',
+    userEmail: 'ss8910642@gmail.com',
+    type: 'credit',
+    amount: 50000,
+    description: 'Account Credited',
+    referenceId: 'CR-MET-89106',
+    status: 'completed',
+    createdAt: '2026-02-15T10:15:00.000Z',
+  },
+  {
+    id: 'tx-2002',
+    userId: 'user-ss-8910642',
+    userName: 'Sakib (SS Metal User)',
+    userEmail: 'ss8910642@gmail.com',
+    type: 'credit',
+    amount: 25500,
+    description: 'Account Credited',
+    referenceId: 'UPI-8910642001',
+    status: 'completed',
+    createdAt: '2026-02-18T14:40:00.000Z',
   },
   {
     id: 'tx-1002',
@@ -262,11 +310,32 @@ export const StorageService = {
   getUsers(): User[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.USERS);
+      let parsed: User[] = [];
       if (!data) {
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
-        return INITIAL_USERS;
+        // Check prior storage versions to preserve any users created by admin
+        const oldV2 = localStorage.getItem('metal_wallet_users_v2');
+        const oldV1 = localStorage.getItem('metal_wallet_users');
+        if (oldV2) {
+          try { parsed = JSON.parse(oldV2); } catch { parsed = [...INITIAL_USERS]; }
+        } else if (oldV1) {
+          try { parsed = JSON.parse(oldV1); } catch { parsed = [...INITIAL_USERS]; }
+        } else {
+          parsed = [...INITIAL_USERS];
+        }
+      } else {
+        parsed = JSON.parse(data);
       }
-      const parsed: User[] = JSON.parse(data);
+
+      // Ensure every user in INITIAL_USERS (especially ss8910642@gmail.com) is present
+      for (const initUser of INITIAL_USERS) {
+        const found = parsed.find((u) => u.email.toLowerCase() === initUser.email.toLowerCase());
+        if (!found) {
+          parsed.push(initUser);
+        }
+      }
+
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsed));
+
       // Admin has NO account balance; reset auto-generated fake bank details to blank
       return parsed.map((u) => {
         let userObj = u.role === 'admin' ? { ...u, balance: 0 } : u;
@@ -299,6 +368,36 @@ export const StorageService = {
   saveUsers(users: User[]) {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
     dispatchStorageEvent();
+    CloudSync.pushAllToServer({ users }).catch(() => {});
+  },
+
+  // Pull latest users and sync across all devices and browsers
+  async syncWithServer(): Promise<boolean> {
+    try {
+      const res = await CloudSync.syncFromServer();
+      if (res.success && Array.isArray(res.users) && res.users.length > 0) {
+        const local = this.getUsers();
+        let changed = false;
+        for (const sUser of res.users) {
+          const idx = local.findIndex((u) => u.id === sUser.id || u.email.toLowerCase() === sUser.email.toLowerCase());
+          if (idx === -1) {
+            local.push(sUser);
+            changed = true;
+          } else {
+            local[idx] = { ...local[idx], ...sUser };
+            changed = true;
+          }
+        }
+        if (changed) {
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(local));
+          dispatchStorageEvent();
+        }
+        return true;
+      }
+    } catch {
+      // offline / standalone mode
+    }
+    return false;
   },
 
   getUserById(id: string): User | undefined {
@@ -362,6 +461,7 @@ export const StorageService = {
 
     users.push(newUser);
     this.saveUsers(users);
+    CloudSync.saveUserToServer(newUser).catch(() => {});
 
     // Notify admin
     this.addNotification({
