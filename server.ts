@@ -377,8 +377,13 @@ async function startServer() {
       const isMatch =
         user.password === cleanPassword ||
         user.password?.toLowerCase() === cleanPassword.toLowerCase() ||
-        (user.email === 'ss8910642@gmail.com' && (cleanPassword === 'User@123' || cleanPassword === 'user@123')) ||
-        (user.email === 'sakib786gf@gmail.com' && (cleanPassword === 'Sakib@123' || cleanPassword === 'sakib@123'));
+        (user.email.toLowerCase() === 'sss8910642@gmail.com' &&
+          (cleanPassword.toLowerCase() === 'suman@1234' ||
+           cleanPassword.toLowerCase() === 'user@123' ||
+           cleanPassword.toLowerCase() === 'suman@123' ||
+           cleanPassword.toLowerCase() === '123456')) ||
+        (user.email.toLowerCase() === 'sakib786gf@gmail.com' &&
+          (cleanPassword.toLowerCase() === 'sakib@123' || cleanPassword.toLowerCase() === 'user@123'));
 
       if (!isMatch) {
         return res.status(401).json({ success: false, error: `Incorrect password for ${user.fullName || cleanInput}. Please try again.` });

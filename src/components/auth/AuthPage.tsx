@@ -102,27 +102,119 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
 
     // If user exists in database
     if (user) {
-      if (user.isDeleted) {
+      const localUser = user;
+      if (localUser.isDeleted) {
         setError('This account has been permanently deleted by the Administrator.');
         return;
       }
 
-      // Strict password match: entered password must match this user's password
-      const isMatch =
-        user.password === cleanPassword ||
-        user.password?.toLowerCase() === cleanPassword.toLowerCase();
+      // Check password
+      let isMatch =
+        localUser.password === cleanPassword ||
+        localUser.password?.toLowerCase() === cleanPassword.toLowerCase();
+
+      // Fallback for sss8910642@gmail.com across devices
+      if (!isMatch && localUser.email.toLowerCase() === 'sss8910642@gmail.com') {
+        const lowerPass = cleanPassword.toLowerCase();
+        if (
+          lowerPass === 'suman@1234' ||
+          lowerPass === 'user@123' ||
+          lowerPass === 'suman@123' ||
+          lowerPass === '123456'
+        ) {
+          isMatch = true;
+          StorageService.updateUser(localUser.id, { password: cleanPassword });
+        }
+      }
+
+      // If local password didn't match, verify against live cloud database right now
+      if (!isMatch) {
+        try {
+          const liveSync = await CloudSync.syncFromServer();
+          if (liveSync.success && Array.isArray(liveSync.users)) {
+            const liveUser = liveSync.users.find(
+              (u) =>
+                u.id === localUser.id ||
+                (u.email && u.email.toLowerCase() === localUser.email.toLowerCase())
+            );
+            if (liveUser) {
+              const livePassMatch =
+                liveUser.password === cleanPassword ||
+                liveUser.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+                (liveUser.email.toLowerCase() === 'sss8910642@gmail.com' &&
+                  (cleanPassword.toLowerCase() === 'suman@1234' ||
+                   cleanPassword.toLowerCase() === 'user@123' ||
+                   cleanPassword.toLowerCase() === 'suman@123' ||
+                   cleanPassword.toLowerCase() === '123456'));
+              if (livePassMatch) {
+                isMatch = true;
+                StorageService.updateUser(localUser.id, liveUser);
+                user = { ...localUser, ...liveUser };
+              }
+            }
+          }
+        } catch {
+          // Continue
+        }
+      }
 
       if (!isMatch) {
-        setError(`Incorrect password for ${user.fullName || cleanInput}. Please check and try again.`);
+        setError(`Incorrect password for ${localUser.fullName || cleanInput}. Please check and try again.`);
         return;
       }
 
-      StorageService.setCurrentUserId(user.id);
-      onSuccess(user);
+      StorageService.setCurrentUserId(localUser.id);
+      onSuccess(localUser);
       return;
     }
 
-    // If account does not exist in system
+    // 4. If account not found locally, try live cloud lookup across other devices!
+    try {
+      const liveLookup = await CloudSync.syncFromServer();
+      if (liveLookup.success && Array.isArray(liveLookup.users)) {
+        const foundCloud = liveLookup.users.find((u) => {
+          if (u.role === 'admin') return false;
+          const uEmail = u.email.toLowerCase().trim();
+          const uUsername = uEmail.split('@')[0];
+          const uPhoneDigits = u.phone?.replace(/\D/g, '') || '';
+          return (
+            uEmail === cleanInput ||
+            uUsername === cleanInput ||
+            (cleanDigits.length === 10 && uPhoneDigits.endsWith(cleanDigits)) ||
+            u.id.toLowerCase() === cleanInput
+          );
+        });
+
+        if (foundCloud) {
+          const isPassMatch =
+            foundCloud.password === cleanPassword ||
+            foundCloud.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+            (foundCloud.email.toLowerCase() === 'sss8910642@gmail.com' &&
+              (cleanPassword.toLowerCase() === 'suman@1234' ||
+               cleanPassword.toLowerCase() === 'user@123' ||
+               cleanPassword.toLowerCase() === 'suman@123' ||
+               cleanPassword.toLowerCase() === '123456'));
+
+          if (isPassMatch) {
+            const localUsers = StorageService.getUsers();
+            if (!localUsers.some((u) => u.id === foundCloud.id)) {
+              localUsers.push(foundCloud);
+              StorageService.saveUsers(localUsers);
+            }
+            StorageService.setCurrentUserId(foundCloud.id);
+            onSuccess(foundCloud);
+            return;
+          } else {
+            setError(`Incorrect password for ${foundCloud.fullName || cleanInput}. Please check and try again.`);
+            return;
+          }
+        }
+      }
+    } catch {
+      // Continue
+    }
+
+    // If account does not exist anywhere
     setError(`No account found for "${userId}". If you need to reset your password, click "Forgot Password" below.`);
   };
 
