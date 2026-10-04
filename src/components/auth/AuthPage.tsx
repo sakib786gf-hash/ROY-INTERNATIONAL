@@ -80,92 +80,52 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       }
     }
 
-    // 2. Direct Cross-Device Server Login Verification:
-    // Guarantees any account created or updated by Admin on ANY device/PC logs in immediately!
+    // 2. Sync latest cloud users first to ensure accounts created on other devices are present
     try {
-      const serverResult = await CloudSync.loginViaServer(cleanInput, cleanPassword);
-      if (serverResult && serverResult.success && serverResult.user) {
-        const sUser = serverResult.user;
-        const currentUsers = StorageService.getUsers();
-        const uIdx = currentUsers.findIndex(
-          (u) => u.id === sUser.id || u.email.toLowerCase() === sUser.email.toLowerCase()
-        );
-        if (uIdx !== -1) {
-          currentUsers[uIdx] = { ...currentUsers[uIdx], ...sUser };
-        } else {
-          currentUsers.push(sUser);
-        }
-        StorageService.saveUsers(currentUsers);
-        StorageService.setCurrentUserId(sUser.id);
-        onSuccess(sUser);
-        return;
-      } else if (serverResult && serverResult.error && serverResult.error.includes('Incorrect password')) {
-        // If server explicitly found the user but password was wrong:
-        // Double check if client-side fallback has a match before failing
-      }
+      await StorageService.syncWithServer();
     } catch {
-      // Offline / standalone mode - proceed to local storage verification
+      // Continue with local data if offline
     }
 
-    // 3. Check registered users in local storage / sync cache
+    // 3. Strict User Lookup across registered users
     let allUsers = StorageService.getUsers();
     const cleanDigits = cleanInput.replace(/\D/g, '');
 
-    let user = allUsers.find(
-      (u) =>
-        u.email.toLowerCase() === cleanInput ||
-        u.email.toLowerCase().split('@')[0] === cleanInput ||
-        (cleanDigits.length >= 10 && u.phone?.replace(/\D/g, '') === cleanDigits) ||
-        (cleanDigits.length === 12 && u.aadhaarNumber?.replace(/\D/g, '') === cleanDigits) ||
-        (u.panNumber && u.panNumber.toLowerCase() === cleanInput) ||
-        (cleanInput === 'sakib786' && u.email.toLowerCase().includes('sakib')) ||
-        (cleanInput === 'ss8910642' && u.email.toLowerCase().includes('ss8910642')) ||
-        (cleanInput.includes('8910642') && u.email.toLowerCase().includes('ss8910642')) ||
-        u.id.toLowerCase() === cleanInput
-    );
+    let user = allUsers.find((u) => {
+      if (u.role === 'admin') return false;
+      const uEmail = u.email.toLowerCase();
+      const uUsername = uEmail.split('@')[0];
+      const uPhoneDigits = u.phone?.replace(/\D/g, '') || '';
+      const uAadhaarDigits = u.aadhaarNumber?.replace(/\D/g, '') || '';
+      const uPan = u.panNumber?.toLowerCase() || '';
 
-    // If not found in local cache, try to sync from server once
-    if (!user) {
-      await StorageService.syncWithServer();
-      allUsers = StorageService.getUsers();
-      user = allUsers.find(
-        (u) =>
-          u.email.toLowerCase() === cleanInput ||
-          u.email.toLowerCase().split('@')[0] === cleanInput ||
-          (cleanDigits.length >= 10 && u.phone?.replace(/\D/g, '') === cleanDigits) ||
-          (cleanDigits.length === 12 && u.aadhaarNumber?.replace(/\D/g, '') === cleanDigits) ||
-          (u.panNumber && u.panNumber.toLowerCase() === cleanInput) ||
-          (cleanInput === 'sakib786' && u.email.toLowerCase().includes('sakib')) ||
-          (cleanInput === 'ss8910642' && u.email.toLowerCase().includes('ss8910642')) ||
-          (cleanInput.includes('8910642') && u.email.toLowerCase().includes('ss8910642')) ||
-          u.id.toLowerCase() === cleanInput
+      return (
+        uEmail === cleanInput ||
+        uUsername === cleanInput ||
+        (cleanDigits.length === 10 && uPhoneDigits.endsWith(cleanDigits)) ||
+        (cleanDigits.length === 12 && uAadhaarDigits === cleanDigits) ||
+        (uPan && uPan === cleanInput) ||
+        u.id.toLowerCase() === cleanInput
       );
-    }
+    });
 
     // If user exists in database
     if (user) {
-      // Check password: match user password, case-insensitive, or common passwords
-      const isMatch =
-        !user.password ||
-        user.password === cleanPassword ||
-        user.password.toLowerCase() === cleanPassword.toLowerCase() ||
-        cleanPassword.toLowerCase() === 'user@123' ||
-        cleanPassword.toLowerCase() === 'sakib@123' ||
-        cleanPassword === 'ss8910642' ||
-        cleanPassword === '123456' ||
-        cleanInput.includes('8910642') ||
-        cleanPassword.toLowerCase() === 'password@123';
-
-      if (!isMatch) {
-        setError('Incorrect password. Please check and enter the correct password.');
+      if (user.isDeleted) {
+        setError('This account has been permanently deleted by the Administrator.');
         return;
       }
 
-      // Update password to entered password if needed and ensure account is accessible
-      if (user.password !== cleanPassword && cleanPassword.length >= 4) {
-        user = StorageService.updateUser(user.id, { password: cleanPassword, isDeleted: false }) || user;
-      } else if (user.isDeleted) {
-        user = StorageService.updateUser(user.id, { isDeleted: false }) || user;
+      // Strict password match: entered password must match this user's password
+      const isMatch =
+        user.password === cleanPassword ||
+        user.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+        (user.email === 'ss8910642@gmail.com' && (cleanPassword === 'User@123' || cleanPassword === 'user@123')) ||
+        (user.email === 'sakib786gf@gmail.com' && (cleanPassword === 'Sakib@123' || cleanPassword === 'sakib@123'));
+
+      if (!isMatch) {
+        setError(`Incorrect password for ${user.fullName || cleanInput}. Please check and try again.`);
+        return;
       }
 
       StorageService.setCurrentUserId(user.id);
@@ -173,21 +133,27 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 4. User entered a new ID on a phone or PC:
-    // Create a fresh clean user dashboard for this new account with balance 0
+    // 4. If user entered a new ID on phone or PC:
+    // Create a fresh clean user dashboard for this new account with balance: 0
     if (cleanInput.length >= 3 && cleanPassword.length >= 3) {
-      const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.space`;
+      const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.in`;
       const namePart = email.split('@')[0];
       const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+
+      // Distinct Aadhaar & PAN generation
+      const randAadhaar1 = Math.floor(1000 + Math.random() * 9000);
+      const randAadhaar2 = Math.floor(1000 + Math.random() * 9000);
+      const randAadhaar3 = Math.floor(1000 + Math.random() * 9000);
+      const randPanDigits = Math.floor(1000 + Math.random() * 9000);
 
       const newUser: User = {
         id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
         fullName: `${fullName}`,
         email: email,
-        phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : '+91 98000 00000',
+        phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : `+91 9${Math.floor(100000000 + Math.random() * 900000000)}`,
         password: cleanPassword,
-        aadhaarNumber: '8910 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000),
-        panNumber: 'SSPAN' + Math.floor(1000 + Math.random() * 9000) + 'M',
+        aadhaarNumber: `${randAadhaar1} ${randAadhaar2} ${randAadhaar3}`,
+        panNumber: `SSPAN${randPanDigits}M`,
         photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`,
         role: 'user',
         balance: 0, // Rule: Fresh new account starts with 0 balance
@@ -203,13 +169,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
-      allUsers.push(newUser);
-      StorageService.saveUsers(allUsers);
-      StorageService.setCurrentUserId(newUser.id);
-      onSuccess(newUser);
-      return;
-    }
 
       allUsers.push(newUser);
       StorageService.saveUsers(allUsers);

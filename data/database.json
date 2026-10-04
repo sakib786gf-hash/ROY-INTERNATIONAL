@@ -68,10 +68,79 @@
       },
       "createdAt": "2026-02-01T10:00:00.000Z",
       "updatedAt": "2026-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "user-priya-003",
+      "fullName": "Priya Sharma",
+      "email": "priya.s@metal.in",
+      "phone": "+91 91234 56789",
+      "password": "Priya@123",
+      "aadhaarNumber": "9832 1045 8821",
+      "panNumber": "BKZPS4920K",
+      "photoUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-01-15T09:45:00.000Z",
+      "updatedAt": "2026-01-15T09:45:00.000Z"
+    },
+    {
+      "id": "user-rahul-004",
+      "fullName": "Rahul Varma",
+      "email": "rahul.v@metal.in",
+      "phone": "+91 94567 89012",
+      "password": "Rahul@123",
+      "aadhaarNumber": "4455 6677 8899",
+      "panNumber": "APZRV9012M",
+      "photoUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-02-01T14:30:00.000Z",
+      "updatedAt": "2026-02-01T14:30:00.000Z"
+    },
+    {
+      "id": "user-muu6xk56-y7ue",
+      "fullName": "Newcustomer (Metal User)",
+      "email": "newcustomer@metal.in",
+      "phone": "+91 89106 42786",
+      "password": "Customer@123",
+      "aadhaarNumber": "8910 6420 9523",
+      "panNumber": "SSPAN4043M",
+      "photoUrl": "https://ui-avatars.com/api/?name=Newcustomer&background=0284c7&color=fff",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-10-04T19:05:08.922Z",
+      "updatedAt": "2026-10-04T19:05:08.922Z"
     }
   ],
   "transactions": [],
   "withdrawals": [],
   "notifications": [],
-  "lastUpdated": "2026-10-04T18:30:00.000Z"
+  "lastUpdated": "2026-10-04T19:05:08.922Z"
 }

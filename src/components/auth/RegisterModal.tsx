@@ -252,19 +252,19 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               </div>
             </div>
 
-            {/* Email Address */}
+            {/* Email / User ID */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Email Address *
+                User ID / Login Email *
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. sakib786gf@gmail.com"
+                  placeholder="e.g. sakib786gf@gmail.com or username@metal.in"
                   className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700 focus:border-emerald-500 text-xs text-white placeholder-slate-500 outline-none font-mono"
                 />
               </div>

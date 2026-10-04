@@ -96,6 +96,7 @@ export default function App() {
   const handleLogout = () => {
     setIsLoggedOut(true);
     setCurrentUser(null);
+    StorageService.setCurrentUserId('');
   };
 
   const handleResetData = () => {

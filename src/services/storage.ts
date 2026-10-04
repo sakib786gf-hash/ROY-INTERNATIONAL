@@ -8,11 +8,11 @@ import {
 import { CloudSync } from './cloudSync';
 
 const STORAGE_KEYS = {
-  USERS: 'metal_wallet_users_v3',
-  CURRENT_USER_ID: 'metal_wallet_current_user_id_v3',
-  TRANSACTIONS: 'metal_wallet_transactions_v3',
-  WITHDRAWALS: 'metal_wallet_withdrawals_v3',
-  NOTIFICATIONS: 'metal_wallet_notifications_v3',
+  USERS: 'metal_wallet_users_v4',
+  CURRENT_USER_ID: 'metal_wallet_current_user_id_v4',
+  TRANSACTIONS: 'metal_wallet_transactions_v4',
+  WITHDRAWALS: 'metal_wallet_withdrawals_v4',
+  NOTIFICATIONS: 'metal_wallet_notifications_v4',
 };
 
 // Default Admin specified in prompt:
@@ -253,13 +253,18 @@ export const StorageService = {
         parsed = JSON.parse(data);
       }
 
-      // Ensure every user in INITIAL_USERS (especially ss8910642@gmail.com and admin) is present
+      // Ensure every user in INITIAL_USERS (admin, sakib, etc.) is present with clean fresh defaults
       for (const initUser of INITIAL_USERS) {
         const foundIdx = parsed.findIndex((u) => u.email.toLowerCase() === initUser.email.toLowerCase());
         if (foundIdx === -1) {
           parsed.push(initUser);
         } else {
-          // Keep saved user modifications while ensuring vital fields (password, phone, Aadhaar & PAN) are preserved
+          // Keep saved user modifications while ensuring vital fields are preserved
+          let userBal = parsed[foundIdx].balance !== undefined ? parsed[foundIdx].balance : initUser.balance;
+          // Rule: If balance was stuck at the legacy fake 75500 or 75000 from old test runs, reset to 0
+          if (userBal === 75500 || userBal === 75000) {
+            userBal = 0;
+          }
           parsed[foundIdx] = {
             ...initUser,
             ...parsed[foundIdx],
@@ -267,10 +272,18 @@ export const StorageService = {
             phone: parsed[foundIdx].phone || initUser.phone,
             aadhaarNumber: parsed[foundIdx].aadhaarNumber || initUser.aadhaarNumber,
             panNumber: parsed[foundIdx].panNumber || initUser.panNumber,
-            balance: parsed[foundIdx].balance !== undefined ? parsed[foundIdx].balance : initUser.balance,
+            balance: userBal,
           };
         }
       }
+
+      // Also reset any other user's balance if stuck at 75500
+      parsed = parsed.map(u => {
+        if (u.balance === 75500 || u.balance === 75000) {
+          return { ...u, balance: 0 };
+        }
+        return u;
+      });
 
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsed));
 
@@ -306,7 +319,12 @@ export const StorageService = {
   saveUsers(users: User[]) {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
     dispatchStorageEvent();
-    CloudSync.pushAllToServer({ users }).catch(() => {});
+    CloudSync.pushAllToServer({
+      users,
+      transactions: this.getTransactions(),
+      withdrawals: this.getWithdrawals(),
+      notifications: this.getNotifications(),
+    }).catch(() => {});
   },
 
   // Pull latest users and sync across all devices and browsers
@@ -707,7 +725,12 @@ export const StorageService = {
   saveWithdrawals(list: WithdrawalRequest[]) {
     localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(list));
     dispatchStorageEvent();
-    CloudSync.pushAllToServer({ withdrawals: list }).catch(() => {});
+    CloudSync.pushAllToServer({
+      users: this.getUsers(),
+      transactions: this.getTransactions(),
+      withdrawals: list,
+      notifications: this.getNotifications(),
+    }).catch(() => {});
   },
 
   createWithdrawalRequest(
@@ -882,7 +905,12 @@ export const StorageService = {
   saveTransactions(txs: Transaction[]) {
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(txs));
     dispatchStorageEvent();
-    CloudSync.pushAllToServer({ transactions: txs }).catch(() => {});
+    CloudSync.pushAllToServer({
+      users: this.getUsers(),
+      transactions: txs,
+      withdrawals: this.getWithdrawals(),
+      notifications: this.getNotifications(),
+    }).catch(() => {});
   },
 
   addTransaction(txData: Omit<Transaction, 'id' | 'createdAt'>): Transaction {

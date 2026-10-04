@@ -178,19 +178,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   return (
     <div className="w-full max-w-md mx-auto min-h-screen pb-24 px-4 pt-4 sm:pt-6 font-sans relative z-10">
-      {/* TOP HEADER ROW */}
-      <div className="flex items-center justify-between gap-2 mb-4">
-        {/* User ID pill - User requested: "আইডির রং সম্পূর্ণ চেঞ্জ হয়ে যাবে রেড কালার হয়ে যাবে একটিভ হলে সবুজ কালার হয়ে যাবে।" */}
-        <div
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold truncate max-w-[240px] sm:max-w-[280px] border transition-all ${
-            isActive
-              ? 'bg-[#06240d] text-[#65ff00] border-[#65ff00]/60 shadow-sm shadow-[#65ff00]/15'
-              : 'bg-[#260a0d] text-rose-500 border-rose-600/60 shadow-sm shadow-rose-500/15'
-          }`}
-        >
-          <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-[#65ff00]' : 'bg-rose-500 animate-pulse'}`} />
-          <UserIcon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#65ff00]' : 'text-rose-500'}`} />
-          <span className="truncate">{currentUser.email}</span>
+      {/* 1. TOP HEADER ROW: WALLET HEADING "METAL • SPACE" + ACTION BUTTONS */}
+      <div className="flex items-center justify-between gap-2 mb-3.5 pt-1">
+        <div className="flex items-center gap-2">
+          <span
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+              isActive
+                ? 'bg-[#65ff00] shadow-[0_0_10px_#65ff00]'
+                : 'bg-rose-500 shadow-[0_0_10px_#f43f5e] animate-pulse'
+            }`}
+          />
+          <h1 className="text-sm sm:text-base font-black tracking-[0.22em] text-white uppercase font-mono">
+            METAL • SPACE
+          </h1>
         </div>
 
         {/* Right action icons */}
@@ -224,14 +224,56 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         </div>
       </div>
 
-      {/* SUBTITLE & GREETING */}
-      <div className="mb-4">
-        <p className="text-[11px] font-bold text-slate-400 tracking-[0.2em] uppercase font-mono">
-          METAL • SPACE
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-serif text-white font-normal mt-0.5 tracking-tight">
-          Good day
-        </h1>
+      {/* 2. USER PROFILE SECTION: PHOTO + NAME IN CAPITAL LETTERS + ID */}
+      <div className="bg-[#0a0f18]/95 border border-slate-800/90 rounded-[24px] p-4 mb-3 shadow-xl backdrop-blur-xl flex items-center gap-3.5">
+        {/* User Photo with Active/Inactive Ring */}
+        <div className="relative shrink-0">
+          <img
+            src={
+              currentUser.photoUrl ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=0284c7&color=fff`
+            }
+            alt={currentUser.fullName}
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 shadow-md transition-all ${
+              isActive
+                ? 'border-[#65ff00] shadow-[#65ff00]/25'
+                : 'border-rose-500 shadow-rose-500/30'
+            }`}
+          />
+          {/* Active / Inactive Status Dot Badge */}
+          <span
+            className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0a0f18] flex items-center justify-center ${
+              isActive ? 'bg-[#65ff00]' : 'bg-rose-500'
+            }`}
+            title={isActive ? 'Active ID' : 'Inactive ID'}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-black' : 'bg-white'}`} />
+          </span>
+        </div>
+
+        {/* User Name in CAPITAL + ID (Login ID / Gmail) */}
+        <div className="min-w-0 flex-1">
+          {/* User Name in BOLD CAPITAL LETTERS */}
+          <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight truncate leading-snug">
+            {currentUser.fullName}
+          </h2>
+
+          {/* User ID Section */}
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+              ID:
+            </span>
+            <span
+              className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg border truncate max-w-[210px] sm:max-w-[260px] select-all transition-colors ${
+                isActive
+                  ? 'bg-[#06240d] text-[#65ff00] border-[#65ff00]/40 shadow-sm shadow-[#65ff00]/10'
+                  : 'bg-[#260a0d] text-rose-400 border-rose-600/40 shadow-sm shadow-rose-500/10'
+              }`}
+            >
+              {currentUser.email}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* TOTAL BALANCE CARD (MATCHING SCREENSHOT) - NOTE: User cannot add money */}
@@ -513,6 +555,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">Full Name:</span>
                 <span className="font-bold text-white text-sm">{currentUser.fullName}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-black border border-slate-800">
+                <span className="text-slate-500 text-[10px] block">User ID (Login ID):</span>
+                <span className="font-mono font-bold text-[#65ff00] text-sm">{currentUser.email}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-black border border-slate-800">
                 <span className="text-slate-500 text-[10px] block">Phone Number:</span>
