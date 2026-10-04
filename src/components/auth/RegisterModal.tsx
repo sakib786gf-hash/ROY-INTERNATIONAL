@@ -11,10 +11,11 @@ import {
   Eye,
   EyeOff,
   Mail,
-  ArrowRight
+  ArrowRight,
+  Building2,
 } from 'lucide-react';
 import { StorageService } from '../../services/storage';
-import { User } from '../../types';
+import { User, AccountType } from '../../types';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -47,6 +48,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [photoUrl, setPhotoUrl] = useState(
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80'
   );
+
+  // Bank details state
+  const [bankName, setBankName] = useState('State Bank of India');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('SBIN0001234');
+  const [accountType, setAccountType] = useState<AccountType>('Savings Account');
+  const [showBankFields, setShowBankFields] = useState(isAdmin);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -104,25 +113,44 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       return setError('Passwords do not match');
     }
 
-    if (aadhaarNumber.replace(/\s/g, '').length !== 12) {
+    let finalAadhaar = aadhaarNumber.trim();
+    if (!finalAadhaar) {
+      const r1 = Math.floor(1000 + Math.random() * 9000);
+      const r2 = Math.floor(1000 + Math.random() * 9000);
+      const r3 = Math.floor(1000 + Math.random() * 9000);
+      finalAadhaar = `${r1} ${r2} ${r3}`;
+    } else if (finalAadhaar.replace(/\s/g, '').length !== 12 && !isAdmin) {
       return setError('Aadhaar Number must be exactly 12 digits');
     }
-    if (panNumber.length !== 10) {
+
+    let finalPan = panNumber.trim().toUpperCase();
+    if (!finalPan) {
+      finalPan = `PAN${Math.floor(1000000 + Math.random() * 9000000)}M`;
+    } else if (finalPan.length !== 10 && !isAdmin) {
       return setError('PAN Number must be 10 characters (e.g., ABCDE1234F)');
     }
 
     const cleanEmail = email.trim().toLowerCase() || `${fullName.toLowerCase().replace(/\s+/g, '')}@metal.in`;
     const parsedBalance = parseFloat(initialBalance) || 0;
 
+    const finalBank = {
+      bankName: bankName.trim() || 'State Bank of India',
+      accountHolderName: accountHolderName.trim() || fullName.trim(),
+      accountNumber: accountNumber.trim(),
+      ifscCode: ifscCode.trim() || 'SBIN0001234',
+      accountType: accountType || 'Savings Account',
+    };
+
     const result = StorageService.registerUser({
       fullName: fullName.trim(),
       email: cleanEmail,
       phone: phone.trim(),
       password: password.trim(),
-      aadhaarNumber: aadhaarNumber.trim(),
-      panNumber: panNumber.trim(),
+      aadhaarNumber: finalAadhaar,
+      panNumber: finalPan,
       photoUrl,
       initialBalance: parsedBalance,
+      bankDetails: finalBank,
     });
 
     if (!result.success) {
@@ -143,6 +171,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setConfirmPassword('');
       setAadhaarNumber('');
       setPanNumber('');
+      setBankName('State Bank of India');
+      setAccountHolderName('');
+      setAccountNumber('');
+      setIfscCode('SBIN0001234');
     }
   };
 
@@ -394,6 +426,80 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 </p>
               </div>
             )}
+
+            {/* Bank Details Section */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-emerald-400" />
+                  <span>Bank Account Details (Optional)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowBankFields(!showBankFields)}
+                  className="text-[11px] text-cyan-400 hover:text-cyan-300 cursor-pointer"
+                >
+                  {showBankFields ? 'Hide Details' : '+ Add Bank Account'}
+                </button>
+              </div>
+
+              {showBankFields && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-950/60 border border-slate-800 animate-in fade-in">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                      Bank Name
+                    </label>
+                    <input
+                      type="text"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      placeholder="e.g. State Bank of India"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                      Account Number
+                    </label>
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 38472910492"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 outline-none font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                      IFSC Code
+                    </label>
+                    <input
+                      type="text"
+                      value={ifscCode}
+                      onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                      placeholder="e.g. SBIN0001234"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 outline-none font-mono uppercase"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                      Account Type
+                    </label>
+                    <select
+                      value={accountType}
+                      onChange={(e) => setAccountType(e.target.value as AccountType)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white outline-none cursor-pointer"
+                    >
+                      <option value="Savings Account">Savings Account</option>
+                      <option value="Current Account">Current Account</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <button

@@ -47,6 +47,29 @@ export const DEFAULT_ADMIN: User = {
 const INITIAL_USERS: User[] = [
   DEFAULT_ADMIN,
   {
+    id: 'user-suman-001',
+    fullName: 'SUMAN KUMAR SIHNA',
+    email: 'sss8910642@gmail.com',
+    phone: '+91 95089 65002',
+    password: 'Suman@1234',
+    aadhaarNumber: '3363 7382 4038',
+    panNumber: 'DUWHH7280L',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-04T19:00:00.000Z',
+    updatedAt: '2026-10-04T19:00:00.000Z',
+  },
+  {
     id: 'user-sakib-002',
     fullName: 'Sakib Khan',
     email: 'sakib786gf@gmail.com',
@@ -203,6 +226,41 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   }
 ];
 
+// Helper to ensure every user has complete, safe properties preventing undefined errors
+export const normalizeUser = (raw: any): User => {
+  const id = raw?.id || `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  const fullName = (raw?.fullName || 'User').trim();
+  const email = (raw?.email || '').toLowerCase().trim();
+  const phone = (raw?.phone || '').trim();
+  const photoUrl = raw?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
+
+  const bankDetails: User['bankDetails'] = {
+    bankName: raw?.bankDetails?.bankName || 'State Bank of India',
+    accountHolderName: raw?.bankDetails?.accountHolderName || fullName,
+    accountNumber: raw?.bankDetails?.accountNumber || '',
+    ifscCode: raw?.bankDetails?.ifscCode || 'SBIN0001234',
+    accountType: raw?.bankDetails?.accountType || 'Savings Account',
+  };
+
+  return {
+    id,
+    fullName,
+    email,
+    phone,
+    password: raw?.password || 'User@123',
+    aadhaarNumber: raw?.aadhaarNumber || 'Not Provided',
+    panNumber: raw?.panNumber || 'NOTPROVIDED',
+    photoUrl,
+    role: raw?.role === 'admin' ? 'admin' : 'user',
+    balance: typeof raw?.balance === 'number' && !isNaN(raw.balance) ? raw.balance : 0,
+    isActive: raw?.isActive !== false,
+    isDeleted: raw?.isDeleted === true,
+    bankDetails,
+    createdAt: raw?.createdAt || new Date().toISOString(),
+    updatedAt: raw?.updatedAt || new Date().toISOString(),
+  };
+};
+
 // Helper to broadcast custom storage events
 const dispatchStorageEvent = () => {
   if (typeof window !== 'undefined') {
@@ -294,12 +352,23 @@ export const StorageService = {
         };
       }
 
-      // 3. Reset any legacy fake 75500 or 75000 test balances to 0
-      parsed = parsed.map((u) => {
-        if (u.balance === 75500 || u.balance === 75000) {
-          return { ...u, balance: 0 };
+      // 3. Fallback: If no regular users are present, merge from INITIAL_USERS so directory is never empty
+      const regularCount = parsed.filter((u) => u.role === 'user').length;
+      if (regularCount === 0) {
+        for (const initU of INITIAL_USERS) {
+          if (initU.role === 'user' && !parsed.some((p) => p.email.toLowerCase() === initU.email.toLowerCase())) {
+            parsed.push(initU);
+          }
         }
-        return u;
+      }
+
+      // 4. Reset any legacy fake 75500 or 75000 test balances to 0 and normalize all users
+      parsed = parsed.map((u) => {
+        const norm = normalizeUser(u);
+        if (norm.balance === 75500 || norm.balance === 75000) {
+          return { ...norm, balance: 0 };
+        }
+        return norm;
       });
 
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsed));
@@ -313,10 +382,11 @@ export const StorageService = {
   },
 
   saveUsers(users: User[]) {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    const normalized = users.map((u) => normalizeUser(u));
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(normalized));
     dispatchStorageEvent();
     CloudSync.pushAllToServer({
-      users,
+      users: normalized,
       transactions: this.getTransactions(),
       withdrawals: this.getWithdrawals(),
       notifications: this.getNotifications(),
@@ -344,12 +414,13 @@ export const StorageService = {
           });
 
           for (const sUser of validServerUsers) {
-            const idx = local.findIndex((u) => u.id === sUser.id || (u.email && sUser.email && u.email.toLowerCase() === sUser.email.toLowerCase()));
+            const normalizedServerUser = normalizeUser(sUser);
+            const idx = local.findIndex((u) => u.id === normalizedServerUser.id || (u.email && normalizedServerUser.email && u.email.toLowerCase() === normalizedServerUser.email.toLowerCase()));
             if (idx === -1) {
-              local.push(sUser);
+              local.push(normalizedServerUser);
               changed = true;
             } else {
-              local[idx] = { ...local[idx], ...sUser };
+              local[idx] = normalizeUser({ ...local[idx], ...normalizedServerUser });
               changed = true;
             }
           }
@@ -437,45 +508,83 @@ export const StorageService = {
       initialBalance?: number;
     }
   ): { success: boolean; user?: User; error?: string } {
-    const users = this.getUsers();
-    const existing = users.find((u) => u.email.toLowerCase() === userData.email.toLowerCase());
-    if (existing) {
-      return { success: false, error: 'An account with this email address already exists.' };
-    }
-
+    const cleanEmail = userData.email.toLowerCase().trim();
     // Ensure the new user's email is unblacklisted if previously deleted
-    this.removeDeletedUserId(userData.email);
+    this.removeDeletedUserId(cleanEmail);
 
+    const users = this.getUsers();
+    const existingIndex = users.findIndex((u) => u.email.toLowerCase().trim() === cleanEmail);
     const startBalance = Number(userData.initialBalance) || 0;
 
-    const newUser: User = {
-      bankDetails: userData.bankDetails || {
-        bankName: '',
-        accountHolderName: '',
-        accountNumber: '',
-        ifscCode: '',
-        accountType: 'Savings Account',
-      },
-      ...userData,
-      id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-      role: 'user',
-      balance: startBalance,
-      isActive: true,
-      isDeleted: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    let targetUser: User;
 
-    users.push(newUser);
+    if (existingIndex !== -1) {
+      // If user exists, update their KYC, credentials, and balance
+      targetUser = normalizeUser({
+        ...users[existingIndex],
+        ...userData,
+        email: cleanEmail,
+        fullName: userData.fullName.trim(),
+        password: userData.password ? userData.password.trim() : users[existingIndex].password,
+        phone: userData.phone.trim(),
+        aadhaarNumber: userData.aadhaarNumber.trim(),
+        panNumber: userData.panNumber.trim(),
+        photoUrl: userData.photoUrl || users[existingIndex].photoUrl,
+        balance: startBalance > 0 ? startBalance : users[existingIndex].balance,
+        isActive: true,
+        isDeleted: false,
+        bankDetails: userData.bankDetails || users[existingIndex].bankDetails,
+        updatedAt: new Date().toISOString(),
+      });
+      users[existingIndex] = targetUser;
+    } else {
+      targetUser = normalizeUser({
+        bankDetails: userData.bankDetails || {
+          bankName: 'State Bank of India',
+          accountHolderName: userData.fullName.trim(),
+          accountNumber: '',
+          ifscCode: 'SBIN0001234',
+          accountType: 'Savings Account',
+        },
+        ...userData,
+        email: cleanEmail,
+        fullName: userData.fullName.trim(),
+        password: userData.password ? userData.password.trim() : 'User@123',
+        id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        role: 'user',
+        balance: startBalance,
+        isActive: true,
+        isDeleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Insert at the top of regular users list (right after admin)
+      const adminIdx = users.findIndex((u) => u.role === 'admin');
+      if (adminIdx !== -1) {
+        users.splice(adminIdx + 1, 0, targetUser);
+      } else {
+        users.unshift(targetUser);
+      }
+    }
+
     this.saveUsers(users);
-    CloudSync.saveUserToServer(newUser).catch(() => {});
 
-    // If Admin assigned initial balance, record transaction specifically for this new user
+    // Immediate POST to server /api/users
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(targetUser),
+    }).catch(() => {});
+
+    CloudSync.saveUserToServer(targetUser).catch(() => {});
+
+    // If Admin assigned initial balance, record transaction
     if (startBalance > 0) {
       this.addTransaction({
-        userId: newUser.id,
-        userName: newUser.fullName,
-        userEmail: newUser.email,
+        userId: targetUser.id,
+        userName: targetUser.fullName,
+        userEmail: targetUser.email,
         type: 'credit',
         amount: startBalance,
         description: 'Account Credited',
@@ -487,12 +596,13 @@ export const StorageService = {
     // Notify admin
     this.addNotification({
       userId: DEFAULT_ADMIN.id,
-      title: 'New User Registered',
-      message: `${newUser.fullName} (${newUser.email}) just created an account with Aadhaar & PAN verification.`,
+      title: 'User Registered / Updated',
+      message: `${targetUser.fullName} (${targetUser.email}) registered and authorized.`,
       type: 'info',
     });
 
-    return { success: true, user: newUser };
+    dispatchStorageEvent();
+    return { success: true, user: targetUser };
   },
 
   updateUser(id: string, updates: Partial<User>): User | undefined {

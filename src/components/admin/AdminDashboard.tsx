@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   ShieldCheck,
@@ -79,16 +79,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Admin user registration modal state
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [newUserSuccessMsg, setNewUserSuccessMsg] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Filter only regular users
-  const regularUsers = users.filter((u) => u.role === 'user');
+  // Auto-sync with cloud and server on mount
+  useEffect(() => {
+    StorageService.syncWithServer().then(() => {
+      onRefreshData();
+    });
+  }, [onRefreshData]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await StorageService.syncWithServer();
+    } catch {
+      // ignore
+    }
+    onRefreshData();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  // Filter only regular users, sorted newest created/updated first
+  const regularUsers = [...users]
+    .filter((u) => u.role === 'user')
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const filteredUsers = regularUsers.filter((u) => {
+    const q = searchQuery.toLowerCase().trim();
+    const fullName = (u.fullName || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    const phone = (u.phone || '');
+    const pan = (u.panNumber || '').toLowerCase();
+    const aadhaar = (u.aadhaarNumber || '').toLowerCase();
+
     const matchesSearch =
-      u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.phone.includes(searchQuery) ||
-      u.panNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      !q ||
+      fullName.includes(q) ||
+      email.includes(q) ||
+      phone.includes(q) ||
+      pan.includes(q) ||
+      aadhaar.includes(q);
 
     if (statusFilter === 'active') return matchesSearch && u.isActive && !u.isDeleted;
     if (statusFilter === 'inactive') return matchesSearch && (!u.isActive || u.isDeleted);
@@ -202,11 +233,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={onRefreshData}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-colors"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-colors disabled:opacity-50"
+            title="Sync latest users and data from server"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#65ff00]' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
           </button>
           <button
             onClick={onLogout}
@@ -224,6 +257,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
           <span className="font-semibold">{deleteSuccessMsg}</span>
+        </div>
+      )}
+
+      {/* New User Registered Success Alert */}
+      {newUserSuccessMsg && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between gap-3 shadow-lg shadow-emerald-500/10 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-sm">User Registration Successful</p>
+              <p className="text-emerald-300/90 text-xs">{newUserSuccessMsg}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setNewUserSuccessMsg(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -397,10 +451,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <div>
                         <span className="text-slate-500 text-[10px] block">KYC Info</span>
                         <span className="font-mono text-white text-[10px] block truncate">
-                          PAN: <strong className="text-amber-300 uppercase">{u.panNumber}</strong>
+                          PAN: <strong className="text-amber-300 uppercase">{u.panNumber || 'N/A'}</strong>
                         </span>
                         <span className="font-mono text-slate-400 text-[10px] block truncate">
-                          UIDAI: {u.aadhaarNumber}
+                          UIDAI: {u.aadhaarNumber || 'Not Provided'}
                         </span>
                       </div>
                     </div>
@@ -408,7 +462,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {/* Bank Account info */}
                     <div className="flex items-center justify-between text-[11px] px-1 text-slate-400">
                       <span className="truncate">
-                        Bank: <strong className="text-slate-300">{u.bankDetails.bankName}</strong> (•• {u.bankDetails.accountNumber.slice(-4)})
+                        Bank: <strong className="text-slate-300">{u.bankDetails?.bankName || 'Not Linked'}</strong> {u.bankDetails?.accountNumber ? `(•• ${u.bankDetails.accountNumber.slice(-4)})` : ''}
                       </span>
                       <button
                         onClick={() => setViewingKycUser(u)}
@@ -500,13 +554,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] text-slate-400 uppercase font-mono">UIDAI:</span>
                               <span className="font-mono text-white font-semibold">
-                                {u.aadhaarNumber}
+                                {u.aadhaarNumber || 'Not Provided'}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] text-slate-400 uppercase font-mono">PAN:</span>
                               <span className="font-mono text-amber-300 font-bold uppercase">
-                                {u.panNumber}
+                                {u.panNumber || 'N/A'}
                               </span>
                             </div>
                             <button
@@ -522,15 +576,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {/* Bank Details */}
                         <td className="py-4 px-4">
                           <div>
-                            <p className="font-semibold text-slate-200">{u.bankDetails.bankName}</p>
+                            <p className="font-semibold text-slate-200">{u.bankDetails?.bankName || 'Not Linked'}</p>
                             <p className="text-[11px] text-slate-400 font-mono">
-                              A/C: •••• {u.bankDetails.accountNumber.slice(-4)}
+                              {u.bankDetails?.accountNumber
+                                ? `A/C: •••• ${u.bankDetails.accountNumber.slice(-4)}`
+                                : 'A/C: Not Linked'}
                             </p>
                             <p className="text-[10px] text-slate-500 font-mono">
-                              IFSC: {u.bankDetails.ifscCode}
+                              IFSC: {u.bankDetails?.ifscCode || 'N/A'}
                             </p>
                             <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                              {u.bankDetails.accountType}
+                              {u.bankDetails?.accountType || 'Savings Account'}
                             </span>
                           </div>
                         </td>
@@ -1165,21 +1221,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex justify-between items-center">
                 <span className="text-slate-400">Aadhaar (UIDAI 12-Digits):</span>
-                <span className="font-mono font-bold text-cyan-300">{viewingKycUser.aadhaarNumber}</span>
+                <span className="font-mono font-bold text-cyan-300">{viewingKycUser.aadhaarNumber || 'Not Provided'}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex justify-between items-center">
                 <span className="text-slate-400">PAN (Income Tax Dept):</span>
-                <span className="font-mono font-bold text-amber-300 uppercase">{viewingKycUser.panNumber}</span>
+                <span className="font-mono font-bold text-amber-300 uppercase">{viewingKycUser.panNumber || 'Not Provided'}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
                 <span className="text-slate-400 block font-semibold text-[11px] mb-1">Registered Bank Details:</span>
                 <div className="grid grid-cols-2 gap-2 text-slate-200">
-                  <p>Bank: <strong className="text-white">{viewingKycUser.bankDetails.bankName}</strong></p>
-                  <p>A/C: <strong className="text-white font-mono">{viewingKycUser.bankDetails.accountNumber}</strong></p>
-                  <p>IFSC: <strong className="text-white font-mono">{viewingKycUser.bankDetails.ifscCode}</strong></p>
-                  <p>Type: <strong className="text-emerald-400">{viewingKycUser.bankDetails.accountType}</strong></p>
+                  <p>Bank: <strong className="text-white">{viewingKycUser.bankDetails?.bankName || 'Not Linked'}</strong></p>
+                  <p>A/C: <strong className="text-white font-mono">{viewingKycUser.bankDetails?.accountNumber || 'Not Linked'}</strong></p>
+                  <p>IFSC: <strong className="text-white font-mono">{viewingKycUser.bankDetails?.ifscCode || 'N/A'}</strong></p>
+                  <p>Type: <strong className="text-emerald-400">{viewingKycUser.bankDetails?.accountType || 'Savings Account'}</strong></p>
                 </div>
               </div>
             </div>
@@ -1262,8 +1318,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <RegisterModal
         isOpen={isCreateUserOpen}
         onClose={() => setIsCreateUserOpen(false)}
-        onSuccess={() => {
+        onSuccess={(createdUser) => {
           setIsCreateUserOpen(false);
+          setSearchQuery('');
+          setStatusFilter('all');
+          setActiveTab('users');
+          if (createdUser) {
+            setNewUserSuccessMsg(`User ${createdUser.fullName} (${createdUser.email}) registered & authorized successfully!`);
+            setTimeout(() => setNewUserSuccessMsg(null), 5000);
+          }
           onRefreshData();
         }}
         isAdmin={true}

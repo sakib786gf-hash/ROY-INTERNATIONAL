@@ -13,7 +13,62 @@ export const CloudSync = {
     withdrawals?: WithdrawalRequest[];
     notifications?: NotificationItem[];
   }> {
-    // 1. Try Primary Global Cloud REST API with cache-busting timestamp
+    // 1. Primary Source of Truth: /api/sync on the Express Node server
+    try {
+      const res = await fetch(`/api/sync?_t=${Date.now()}`, {
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store'
+      });
+      const cType = res.headers.get('content-type') || '';
+      if (res.ok && cType.includes('application/json')) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users) && data.users.length > 0) {
+          const sanitizedUsers: User[] = data.users
+            .filter((u: any) => {
+              if (!u || !u.id) return false;
+              const uId = (u.id || '').toLowerCase();
+              const uEmail = (u.email || '').toLowerCase();
+              if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
+              return true;
+            })
+            .map((u: any) => ({
+              id: u.id,
+              fullName: u.fullName || 'User',
+              email: (u.email || '').toLowerCase().trim(),
+              phone: u.phone || '',
+              password: u.password || 'User@123',
+              role: u.role === 'admin' ? 'admin' : 'user',
+              balance: typeof u.balance === 'number' ? u.balance : 0,
+              isActive: u.isActive !== false,
+              isDeleted: u.isDeleted === true,
+              photoUrl: u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName || 'User')}&background=0284c7&color=fff`,
+              aadhaarNumber: u.aadhaarNumber || 'Not Provided',
+              panNumber: u.panNumber || 'NOTPROVIDED',
+              bankDetails: {
+                bankName: u.bankDetails?.bankName || 'Not Linked',
+                accountHolderName: u.bankDetails?.accountHolderName || u.fullName || '',
+                accountNumber: u.bankDetails?.accountNumber || '',
+                ifscCode: u.bankDetails?.ifscCode || '',
+                accountType: u.bankDetails?.accountType || 'Savings Account',
+              },
+              createdAt: u.createdAt || new Date().toISOString(),
+              updatedAt: u.updatedAt || new Date().toISOString(),
+            }));
+
+          return {
+            success: true,
+            users: sanitizedUsers,
+            transactions: data.transactions || [],
+            withdrawals: data.withdrawals || [],
+            notifications: data.notifications || [],
+          };
+        }
+      }
+    } catch {
+      // Server offline / standalone mode fallback
+    }
+
+    // 2. Secondary Cloud REST API fallback (if running static build without Node)
     const endpoints = [
       `${PRIMARY_CLOUD_ENDPOINT}?_t=${Date.now()}`,
       `${BACKUP_CLOUD_ENDPOINT}?_t=${Date.now()}`
@@ -39,17 +94,35 @@ export const CloudSync = {
                 try {
                   const parsed = JSON.parse(val);
                   if (key.startsWith('u')) {
-                    // Filter deleted or unwanted legacy accounts
                     if (
                       parsed.id === 'user-ss-8910642' ||
                       (parsed.email && parsed.email.toLowerCase() === 'ss8910642@gmail.com')
                     ) {
                       continue;
                     }
-                    if (!parsed.photoUrl) {
-                      parsed.photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(parsed.fullName || 'User')}&background=0284c7&color=fff`;
-                    }
-                    parsedUsers.push(parsed);
+                    parsedUsers.push({
+                      id: parsed.id,
+                      fullName: parsed.fullName || 'User',
+                      email: (parsed.email || '').toLowerCase().trim(),
+                      phone: parsed.phone || '',
+                      password: parsed.password || 'User@123',
+                      role: parsed.role === 'admin' ? 'admin' : 'user',
+                      balance: typeof parsed.balance === 'number' ? parsed.balance : 0,
+                      isActive: parsed.isActive !== false,
+                      isDeleted: parsed.isDeleted === true,
+                      photoUrl: parsed.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(parsed.fullName || 'User')}&background=0284c7&color=fff`,
+                      aadhaarNumber: parsed.aadhaarNumber || 'Not Provided',
+                      panNumber: parsed.panNumber || 'NOTPROVIDED',
+                      bankDetails: {
+                        bankName: parsed.bankDetails?.bankName || 'Not Linked',
+                        accountHolderName: parsed.bankDetails?.accountHolderName || parsed.fullName || '',
+                        accountNumber: parsed.bankDetails?.accountNumber || '',
+                        ifscCode: parsed.bankDetails?.ifscCode || '',
+                        accountType: parsed.bankDetails?.accountType || 'Savings Account',
+                      },
+                      createdAt: parsed.createdAt || new Date().toISOString(),
+                      updatedAt: parsed.updatedAt || new Date().toISOString(),
+                    });
                   } else if (key.startsWith('t')) {
                     parsedTransactions.push(parsed);
                   } else if (key.startsWith('w')) {
@@ -79,29 +152,6 @@ export const CloudSync = {
       }
     }
 
-    // 2. Fallback to same-origin /api/sync if running in Express Node server
-    try {
-      const res = await fetch(`/api/sync?_t=${Date.now()}`, {
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store'
-      });
-      const cType = res.headers.get('content-type') || '';
-      if (res.ok && cType.includes('application/json')) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.users) && data.users.length > 0) {
-          return {
-            success: true,
-            users: data.users || [],
-            transactions: data.transactions || [],
-            withdrawals: data.withdrawals || [],
-            notifications: data.notifications || [],
-          };
-        }
-      }
-    } catch {
-      // Offline / standalone mode
-    }
-
     return { success: false };
   },
 
@@ -114,13 +164,27 @@ export const CloudSync = {
   }): Promise<boolean> {
     let cloudSaved = false;
 
-    // Pack individual items compactly to stay safely under size limits
+    // 1. Immediately push to local Express backend /api/sync
+    try {
+      const sRes = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (sRes.ok) {
+        cloudSaved = true;
+      }
+    } catch {
+      // Standalone / offline mode
+    }
+
+    // 2. Pack individual items compactly for secondary cloud sync
     const dataObj: Record<string, string> = {};
 
     if (Array.isArray(payload.users)) {
       const cleanUsers = payload.users.filter((u) => {
         if (!u || !u.id) return false;
-        const uId = u.id.toLowerCase();
+        const uId = (u.id || '').toLowerCase();
         const uEmail = (u.email || '').toLowerCase();
         if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
         if (u.isDeleted) return false;
@@ -130,21 +194,25 @@ export const CloudSync = {
       cleanUsers.forEach((u, i) => {
         const compactUser: Record<string, any> = {
           id: u.id,
-          fullName: u.fullName,
+          fullName: u.fullName || 'User',
           email: u.email,
           phone: u.phone,
           password: u.password,
           role: u.role,
           balance: u.balance || 0,
           isActive: u.isActive !== false,
+          aadhaarNumber: u.aadhaarNumber || 'Not Provided',
+          panNumber: u.panNumber || 'NOTPROVIDED',
+          bankDetails: u.bankDetails || {
+            bankName: 'Not Linked',
+            accountHolderName: u.fullName || '',
+            accountNumber: '',
+            ifscCode: '',
+            accountType: 'Savings Account',
+          },
         };
         if (u.photoUrl && !u.photoUrl.startsWith('data:')) {
           compactUser.photoUrl = u.photoUrl;
-        }
-        if (u.aadhaarNumber) compactUser.aadhaarNumber = u.aadhaarNumber;
-        if (u.panNumber) compactUser.panNumber = u.panNumber;
-        if (u.bankDetails?.accountNumber) {
-          compactUser.bankDetails = u.bankDetails;
         }
         dataObj[`u${i}`] = JSON.stringify(compactUser);
       });
@@ -180,7 +248,7 @@ export const CloudSync = {
       data: dataObj,
     });
 
-    // Push to Primary and Backup endpoints in parallel
+    // Push to Primary and Backup cloud endpoints in parallel
     const targetUrls = [PRIMARY_CLOUD_ENDPOINT, BACKUP_CLOUD_ENDPOINT];
     await Promise.all(
       targetUrls.map(async (url) => {
@@ -199,23 +267,19 @@ export const CloudSync = {
       })
     );
 
-    // Also push to local server API if running Node backend
-    try {
-      await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // Standalone mode
-    }
-
     return cloudSaved;
   },
 
-  // Save single user immediately to global cloud
+  // Save single user immediately to global cloud and backend
   async saveUserToServer(user: User): Promise<boolean> {
     try {
+      // Direct POST to /api/users
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      }).catch(() => {});
+
       const current = await this.syncFromServer();
       const users = current.users || [];
       const idx = users.findIndex(
