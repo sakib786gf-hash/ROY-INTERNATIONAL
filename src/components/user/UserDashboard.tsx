@@ -255,7 +255,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         <div className="min-w-0 flex-1">
           {/* User Name in BOLD CAPITAL LETTERS */}
           <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight truncate leading-snug">
-            {currentUser.fullName}
+            {currentUser.fullName?.toUpperCase()}
           </h2>
 
           {/* User ID Section */}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Lock, ArrowRight, ShieldCheck, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
 import { StorageService, DEFAULT_ADMIN } from '../../services/storage';
 import { CloudSync } from '../../services/cloudSync';
 import { User } from '../../types';
+import { RegisterModal } from './RegisterModal';
 
 interface AuthPageProps {
   onSuccess: (user: User) => void;
@@ -14,19 +15,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [inactiveUser, setInactiveUser] = useState<User | null>(null);
-
-  // Quick fill helper
-  const handleQuickFill = (role: 'admin' | 'user') => {
-    if (role === 'admin') {
-      setUserId('izaz786@metal.com');
-      setPassword('Izaz@123');
-    } else {
-      setUserId('sakib786gf@gmail.com');
-      setPassword('User@123');
-    }
-    setError(null);
-    setInactiveUser(null);
-  };
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +35,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 1. Check Admin Credentials from Prompt Specification:
+    // 1. Check Admin Credentials:
     // Username/Email: izaz786@metal.com / izaz786 / admin / izaz
     // Password: Izaz@123 / admin / admin123
     const isAdminId =
@@ -93,7 +82,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
 
     let user = allUsers.find((u) => {
       if (u.role === 'admin') return false;
-      const uEmail = u.email.toLowerCase();
+      const uEmail = u.email.toLowerCase().trim();
       const uUsername = uEmail.split('@')[0];
       const uPhoneDigits = u.phone?.replace(/\D/g, '') || '';
       const uAadhaarDigits = u.aadhaarNumber?.replace(/\D/g, '') || '';
@@ -119,9 +108,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       // Strict password match: entered password must match this user's password
       const isMatch =
         user.password === cleanPassword ||
-        user.password?.toLowerCase() === cleanPassword.toLowerCase() ||
-        (user.email === 'ss8910642@gmail.com' && (cleanPassword === 'User@123' || cleanPassword === 'user@123')) ||
-        (user.email === 'sakib786gf@gmail.com' && (cleanPassword === 'Sakib@123' || cleanPassword === 'sakib@123'));
+        user.password?.toLowerCase() === cleanPassword.toLowerCase();
 
       if (!isMatch) {
         setError(`Incorrect password for ${user.fullName || cleanInput}. Please check and try again.`);
@@ -133,51 +120,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 4. If user entered a new ID on phone or PC:
-    // Create a fresh clean user dashboard for this new account with balance: 0
-    if (cleanInput.length >= 3 && cleanPassword.length >= 3) {
-      const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.in`;
-      const namePart = email.split('@')[0];
-      const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-
-      // Distinct Aadhaar & PAN generation
-      const randAadhaar1 = Math.floor(1000 + Math.random() * 9000);
-      const randAadhaar2 = Math.floor(1000 + Math.random() * 9000);
-      const randAadhaar3 = Math.floor(1000 + Math.random() * 9000);
-      const randPanDigits = Math.floor(1000 + Math.random() * 9000);
-
-      const newUser: User = {
-        id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-        fullName: `${fullName}`,
-        email: email,
-        phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : `+91 9${Math.floor(100000000 + Math.random() * 900000000)}`,
-        password: cleanPassword,
-        aadhaarNumber: `${randAadhaar1} ${randAadhaar2} ${randAadhaar3}`,
-        panNumber: `SSPAN${randPanDigits}M`,
-        photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`,
-        role: 'user',
-        balance: 0, // Rule: Fresh new account starts with 0 balance
-        isActive: true,
-        isDeleted: false,
-        bankDetails: {
-          bankName: '',
-          accountHolderName: '',
-          accountNumber: '',
-          ifscCode: '',
-          accountType: 'Savings Account',
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      allUsers.push(newUser);
-      StorageService.saveUsers(allUsers);
-      StorageService.setCurrentUserId(newUser.id);
-      onSuccess(newUser);
-      return;
-    }
-
-    setError('Please enter a valid User ID and Password.');
+    // 4. If account does not exist yet: open Register Modal prefilled so user can enter their Full Name!
+    setError(`Account not found for "${userId}". Please enter your Full Name to register this account.`);
+    setIsRegisterOpen(true);
   };
 
   const handleReactivate = () => {
@@ -258,7 +203,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
                 required
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                placeholder="Enter user ID"
+                placeholder="Enter user ID / Gmail"
                 className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#060a12] border border-slate-800 text-sm text-white placeholder-slate-600 focus:border-[#65ff00] focus:ring-1 focus:ring-[#65ff00] outline-none transition-all"
               />
             </div>
@@ -293,7 +238,35 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
+
+        {/* User Registration Link */}
+        <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
+          <p className="text-xs text-slate-400">
+            নতুন আইডি খুলতে চান?{' '}
+            <button
+              type="button"
+              onClick={() => setIsRegisterOpen(true)}
+              className="text-[#65ff00] font-bold hover:underline cursor-pointer ml-1 inline-flex items-center gap-1"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>নতুন একাউন্ট রেজিস্টার করুন</span>
+            </button>
+          </p>
+        </div>
       </div>
+
+      {/* User Self Registration Modal */}
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSuccess={(newUser) => {
+          setIsRegisterOpen(false);
+          onSuccess(newUser);
+        }}
+        initialEmail={userId.includes('@') ? userId.trim() : ''}
+        initialPassword={password.trim()}
+        isAdmin={false}
+      />
     </div>
   );
 };

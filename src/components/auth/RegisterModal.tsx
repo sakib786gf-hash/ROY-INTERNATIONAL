@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   User as UserIcon,
@@ -22,6 +22,8 @@ interface RegisterModalProps {
   onSuccess: (user: User) => void;
   onSwitchToLogin?: () => void;
   isAdmin?: boolean;
+  initialEmail?: string;
+  initialPassword?: string;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -30,12 +32,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onSuccess,
   onSwitchToLogin,
   isAdmin = false,
+  initialEmail = '',
+  initialPassword = '',
 }) => {
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState(initialPassword);
+  const [confirmPassword, setConfirmPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [panNumber, setPanNumber] = useState('');
@@ -45,6 +49,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   );
 
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+    if (initialPassword) {
+      setPassword(initialPassword);
+      setConfirmPassword(initialPassword);
+    }
+  }, [initialEmail, initialPassword, isOpen]);
 
   if (!isOpen) return null;
 

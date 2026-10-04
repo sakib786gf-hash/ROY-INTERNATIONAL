@@ -31,6 +31,13 @@ export const CloudSync = {
               try {
                 const parsed = JSON.parse(val);
                 if (key.startsWith('u')) {
+                  // Never pull SS Metal User per user explicit instruction
+                  if (
+                    parsed.id === 'user-ss-8910642' ||
+                    (parsed.email && parsed.email.toLowerCase() === 'ss8910642@gmail.com')
+                  ) {
+                    continue;
+                  }
                   // Ensure default photo if missing
                   if (!parsed.photoUrl) {
                     parsed.photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(parsed.fullName || 'User')}&background=0284c7&color=fff`;
@@ -103,28 +110,40 @@ export const CloudSync = {
       const dataObj: Record<string, string> = {};
 
       if (Array.isArray(payload.users)) {
-        payload.users.forEach((u, i) => {
-          const compactUser = {
+        const cleanUsers = payload.users.filter((u) => {
+          if (!u || !u.id) return false;
+          const uId = u.id.toLowerCase();
+          const uEmail = (u.email || '').toLowerCase();
+          if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
+          if (u.isDeleted) return false;
+          return true;
+        });
+
+        cleanUsers.forEach((u, i) => {
+          const compactUser: Record<string, any> = {
             id: u.id,
             fullName: u.fullName,
             email: u.email,
             phone: u.phone,
             password: u.password,
             role: u.role,
-            balance: u.balance,
-            isActive: u.isActive,
-            isDeleted: u.isDeleted,
-            aadhaarNumber: u.aadhaarNumber,
-            panNumber: u.panNumber,
-            bankDetails: u.bankDetails,
-            createdAt: u.createdAt,
+            balance: u.balance || 0,
+            isActive: u.isActive !== false,
           };
+          if (u.photoUrl && !u.photoUrl.startsWith('data:')) {
+            compactUser.photoUrl = u.photoUrl;
+          }
+          if (u.aadhaarNumber) compactUser.aadhaarNumber = u.aadhaarNumber;
+          if (u.panNumber) compactUser.panNumber = u.panNumber;
+          if (u.bankDetails?.accountNumber) {
+            compactUser.bankDetails = u.bankDetails;
+          }
           dataObj[`u${i}`] = JSON.stringify(compactUser);
         });
       }
 
       if (Array.isArray(payload.transactions)) {
-        const recentTxs = payload.transactions.slice(0, 15);
+        const recentTxs = payload.transactions.slice(0, 8);
         recentTxs.forEach((tx, i) => {
           const compactTx = {
             id: tx.id,
@@ -142,7 +161,7 @@ export const CloudSync = {
       }
 
       if (Array.isArray(payload.withdrawals)) {
-        const recentWdrs = payload.withdrawals.slice(0, 10);
+        const recentWdrs = payload.withdrawals.slice(0, 5);
         recentWdrs.forEach((w, i) => {
           dataObj[`w${i}`] = JSON.stringify(w);
         });

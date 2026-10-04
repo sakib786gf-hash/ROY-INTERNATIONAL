@@ -8,11 +8,12 @@ import {
 import { CloudSync } from './cloudSync';
 
 const STORAGE_KEYS = {
-  USERS: 'metal_wallet_users_v4',
-  CURRENT_USER_ID: 'metal_wallet_current_user_id_v4',
-  TRANSACTIONS: 'metal_wallet_transactions_v4',
-  WITHDRAWALS: 'metal_wallet_withdrawals_v4',
-  NOTIFICATIONS: 'metal_wallet_notifications_v4',
+  USERS: 'metal_wallet_users_v5',
+  CURRENT_USER_ID: 'metal_wallet_current_user_id_v5',
+  TRANSACTIONS: 'metal_wallet_transactions_v5',
+  WITHDRAWALS: 'metal_wallet_withdrawals_v5',
+  NOTIFICATIONS: 'metal_wallet_notifications_v5',
+  DELETED_USER_IDS: 'metal_wallet_deleted_user_ids_v5',
 };
 
 // Default Admin specified in prompt:
@@ -42,7 +43,7 @@ export const DEFAULT_ADMIN: User = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-// Sample standard users
+// Sample standard users (SS Metal User completely removed per user instruction)
 const INITIAL_USERS: User[] = [
   DEFAULT_ADMIN,
   {
@@ -67,29 +68,6 @@ const INITIAL_USERS: User[] = [
     },
     createdAt: '2026-01-10T11:20:00.000Z',
     updatedAt: '2026-01-10T11:20:00.000Z',
-  },
-  {
-    id: 'user-ss-8910642',
-    fullName: 'Sakib (SS Metal User)',
-    email: 'ss8910642@gmail.com',
-    phone: '+91 89106 42786',
-    password: 'User@123',
-    aadhaarNumber: '8910 6420 5647',
-    panNumber: 'SSPAN5647M',
-    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-02-01T10:00:00.000Z',
-    updatedAt: '2026-02-01T10:00:00.000Z',
   },
   {
     id: 'user-priya-003',
@@ -233,19 +211,58 @@ const dispatchStorageEvent = () => {
 };
 
 export const StorageService = {
+  // --- DELETED USERS TRACKING (Prevents resurrecting permanently deleted users) ---
+  getDeletedUserIds(): string[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.DELETED_USER_IDS);
+      const list: string[] = data ? JSON.parse(data) : [];
+      // Always permanently blacklisted per user explicit instruction
+      if (!list.includes('user-ss-8910642')) list.push('user-ss-8910642');
+      if (!list.includes('ss8910642@gmail.com')) list.push('ss8910642@gmail.com');
+      return list;
+    } catch {
+      return ['user-ss-8910642', 'ss8910642@gmail.com'];
+    }
+  },
+
+  addDeletedUserId(idOrEmail: string) {
+    try {
+      const list = this.getDeletedUserIds();
+      const clean = idOrEmail.toLowerCase().trim();
+      if (!list.includes(clean)) {
+        list.push(clean);
+        localStorage.setItem(STORAGE_KEYS.DELETED_USER_IDS, JSON.stringify(list));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  },
+
+  removeDeletedUserId(idOrEmail: string) {
+    try {
+      const list = this.getDeletedUserIds();
+      const clean = idOrEmail.toLowerCase().trim();
+      const updated = list.filter((item) => item !== clean && item !== idOrEmail);
+      localStorage.setItem(STORAGE_KEYS.DELETED_USER_IDS, JSON.stringify(updated));
+    } catch {
+      // Ignore storage errors
+    }
+  },
+
   // --- USERS ---
   getUsers(): User[] {
     try {
+      const deletedIds = this.getDeletedUserIds();
       const data = localStorage.getItem(STORAGE_KEYS.USERS);
       let parsed: User[] = [];
       if (!data) {
-        // Check prior storage versions to preserve any users created by admin
-        const oldV2 = localStorage.getItem('metal_wallet_users_v2');
-        const oldV1 = localStorage.getItem('metal_wallet_users');
-        if (oldV2) {
-          try { parsed = JSON.parse(oldV2); } catch { parsed = [...INITIAL_USERS]; }
-        } else if (oldV1) {
-          try { parsed = JSON.parse(oldV1); } catch { parsed = [...INITIAL_USERS]; }
+        // First run on new device: load initial users
+        const oldV4 = localStorage.getItem('metal_wallet_users_v4');
+        const oldV3 = localStorage.getItem('metal_wallet_users_v3');
+        if (oldV4) {
+          try { parsed = JSON.parse(oldV4); } catch { parsed = [...INITIAL_USERS]; }
+        } else if (oldV3) {
+          try { parsed = JSON.parse(oldV3); } catch { parsed = [...INITIAL_USERS]; }
         } else {
           parsed = [...INITIAL_USERS];
         }
@@ -253,32 +270,32 @@ export const StorageService = {
         parsed = JSON.parse(data);
       }
 
-      // Ensure every user in INITIAL_USERS (admin, sakib, etc.) is present with clean fresh defaults
-      for (const initUser of INITIAL_USERS) {
-        const foundIdx = parsed.findIndex((u) => u.email.toLowerCase() === initUser.email.toLowerCase());
-        if (foundIdx === -1) {
-          parsed.push(initUser);
-        } else {
-          // Keep saved user modifications while ensuring vital fields are preserved
-          let userBal = parsed[foundIdx].balance !== undefined ? parsed[foundIdx].balance : initUser.balance;
-          // Rule: If balance was stuck at the legacy fake 75500 or 75000 from old test runs, reset to 0
-          if (userBal === 75500 || userBal === 75000) {
-            userBal = 0;
-          }
-          parsed[foundIdx] = {
-            ...initUser,
-            ...parsed[foundIdx],
-            password: parsed[foundIdx].password || initUser.password,
-            phone: parsed[foundIdx].phone || initUser.phone,
-            aadhaarNumber: parsed[foundIdx].aadhaarNumber || initUser.aadhaarNumber,
-            panNumber: parsed[foundIdx].panNumber || initUser.panNumber,
-            balance: userBal,
-          };
-        }
+      // 1. Strictly filter out SS Metal User and any user permanently deleted by admin
+      parsed = parsed.filter((u) => {
+        if (!u || !u.id) return false;
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uId = (u.id || '').toLowerCase().trim();
+        if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
+        if (deletedIds.includes(uId) || deletedIds.includes(uEmail)) return false;
+        return true;
+      });
+
+      // 2. Ensure Admin ALWAYS exists so admin can log in (izaz786@metal.com / Izaz@123)
+      const adminIdx = parsed.findIndex(
+        (u) => u.role === 'admin' || (u.email && u.email.toLowerCase() === DEFAULT_ADMIN.email.toLowerCase())
+      );
+      if (adminIdx === -1) {
+        parsed.unshift(DEFAULT_ADMIN);
+      } else {
+        parsed[adminIdx] = {
+          ...DEFAULT_ADMIN,
+          ...parsed[adminIdx],
+          balance: 0, // Admin has NO personal wallet balance
+        };
       }
 
-      // Also reset any other user's balance if stuck at 75500
-      parsed = parsed.map(u => {
+      // 3. Reset any legacy fake 75500 or 75000 test balances to 0
+      parsed = parsed.map((u) => {
         if (u.balance === 75500 || u.balance === 75000) {
           return { ...u, balance: 0 };
         }
@@ -287,32 +304,11 @@ export const StorageService = {
 
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsed));
 
-      // Admin has NO account balance; reset auto-generated fake bank details to blank
       return parsed.map((u) => {
-        let userObj = u.role === 'admin' ? { ...u, balance: 0 } : u;
-        if (
-          userObj.bankDetails?.accountNumber === '94567001419' ||
-          userObj.bankDetails?.accountNumber === '38947281920' ||
-          userObj.bankDetails?.accountNumber === '001101567890' ||
-          userObj.bankDetails?.accountNumber === '0624000100987654' ||
-          userObj.email?.toLowerCase().includes('iran') ||
-          userObj.fullName?.toLowerCase().includes('iran')
-        ) {
-          userObj = {
-            ...userObj,
-            bankDetails: {
-              bankName: '',
-              accountHolderName: '',
-              accountNumber: '',
-              ifscCode: '',
-              accountType: 'Savings Account',
-            },
-          };
-        }
-        return userObj;
+        return u.role === 'admin' ? { ...u, balance: 0 } : u;
       });
     } catch {
-      return INITIAL_USERS;
+      return [DEFAULT_ADMIN];
     }
   },
 
@@ -337,8 +333,18 @@ export const StorageService = {
         // Sync Users
         if (Array.isArray(res.users) && res.users.length > 0) {
           const local = this.getUsers();
-          for (const sUser of res.users) {
-            const idx = local.findIndex((u) => u.id === sUser.id || u.email.toLowerCase() === sUser.email.toLowerCase());
+          const deletedIds = this.getDeletedUserIds();
+          const validServerUsers = res.users.filter((u) => {
+            if (!u || !u.id) return false;
+            const uEmail = (u.email || '').toLowerCase().trim();
+            const uId = (u.id || '').toLowerCase().trim();
+            if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
+            if (deletedIds.includes(uId) || deletedIds.includes(uEmail)) return false;
+            return true;
+          });
+
+          for (const sUser of validServerUsers) {
+            const idx = local.findIndex((u) => u.id === sUser.id || (u.email && sUser.email && u.email.toLowerCase() === sUser.email.toLowerCase()));
             if (idx === -1) {
               local.push(sUser);
               changed = true;
@@ -437,6 +443,9 @@ export const StorageService = {
       return { success: false, error: 'An account with this email address already exists.' };
     }
 
+    // Ensure the new user's email is unblacklisted if previously deleted
+    this.removeDeletedUserId(userData.email);
+
     const startBalance = Number(userData.initialBalance) || 0;
 
     const newUser: User = {
@@ -531,7 +540,15 @@ export const StorageService = {
     if (!targetUser) return { success: false, error: 'User not found' };
     if (targetUser.role === 'admin') return { success: false, error: 'Cannot delete admin account' };
 
-    const remainingUsers = users.filter((u) => u.id !== userId);
+    // Record target user ID and email in permanently deleted list so it never resurrects
+    this.addDeletedUserId(userId);
+    if (targetUser.email) {
+      this.addDeletedUserId(targetUser.email.toLowerCase());
+    }
+
+    const remainingUsers = users.filter(
+      (u) => u.id !== userId && (!targetUser.email || u.email.toLowerCase() !== targetUser.email.toLowerCase())
+    );
     this.saveUsers(remainingUsers);
 
     // Remove user transactions
@@ -552,6 +569,15 @@ export const StorageService = {
       localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_ID);
     }
 
+    // Immediately push deletions to Cloud Master DB
+    CloudSync.pushAllToServer({
+      users: remainingUsers,
+      transactions: txs,
+      withdrawals: wdrs,
+      notifications: notifs,
+    }).catch(() => {});
+
+    dispatchStorageEvent();
     return { success: true };
   },
 
