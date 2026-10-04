@@ -2,26 +2,26 @@
   "users": [
     {
       "id": "admin-izaz-001",
-      "fullName": "Izaz Metal Admin",
+      "fullName": "Izaz Admin",
       "email": "izaz786@metal.com",
       "phone": "+91 98321 00786",
       "password": "Izaz@123",
       "aadhaarNumber": "9988 7766 5544",
       "panNumber": "IZAZA7860M",
-      "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+      "photoUrl": "https://ui-avatars.com/api/?name=Izaz%20Admin&background=0284c7&color=fff",
       "role": "admin",
       "balance": 0,
       "isActive": true,
       "isDeleted": false,
       "bankDetails": {
-        "bankName": "System Banking Gateway",
-        "accountHolderName": "Platform Reserve Desk",
-        "accountNumber": "RBI-NET-0001",
-        "ifscCode": "RBIS0000001",
-        "accountType": "Current Account"
+        "bankName": "HDFC Bank",
+        "accountHolderName": "Izaz Metal Admin",
+        "accountNumber": "50100492817291",
+        "ifscCode": "HDFC0000128",
+        "accountType": "Savings Account"
       },
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-09-30T13:42:59.613Z"
     },
     {
       "id": "user-sakib-002",
@@ -31,43 +31,20 @@
       "password": "Sakib@123",
       "aadhaarNumber": "7821 4590 1234",
       "panNumber": "ABCDE1234F",
-      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "photoUrl": "https://ui-avatars.com/api/?name=Sakib%20Khan&background=0284c7&color=fff",
       "role": "user",
       "balance": 0,
       "isActive": true,
       "isDeleted": false,
       "bankDetails": {
-        "bankName": "",
-        "accountHolderName": "",
-        "accountNumber": "",
-        "ifscCode": "",
+        "bankName": "Tivdyh",
+        "accountHolderName": "Itui",
+        "accountNumber": "69485899",
+        "ifscCode": "SBIN056747",
         "accountType": "Savings Account"
       },
       "createdAt": "2026-01-10T11:20:00.000Z",
-      "updatedAt": "2026-01-10T11:20:00.000Z"
-    },
-    {
-      "id": "user-ss-8910642",
-      "fullName": "Sakib (SS Metal User)",
-      "email": "ss8910642@gmail.com",
-      "phone": "+91 89106 42786",
-      "password": "User@123",
-      "aadhaarNumber": "8910 6420 5647",
-      "panNumber": "SSPAN5647M",
-      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
-      "role": "user",
-      "balance": 0,
-      "isActive": true,
-      "isDeleted": false,
-      "bankDetails": {
-        "bankName": "",
-        "accountHolderName": "",
-        "accountNumber": "",
-        "ifscCode": "",
-        "accountType": "Savings Account"
-      },
-      "createdAt": "2026-02-01T10:00:00.000Z",
-      "updatedAt": "2026-02-01T10:00:00.000Z"
+      "updatedAt": "2026-10-04T15:04:33.102Z"
     },
     {
       "id": "user-priya-003",
@@ -79,8 +56,8 @@
       "panNumber": "BKZPS4920K",
       "photoUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80",
       "role": "user",
-      "balance": 0,
-      "isActive": true,
+      "balance": 142000,
+      "isActive": false,
       "isDeleted": false,
       "bankDetails": {
         "bankName": "",
@@ -90,7 +67,7 @@
         "accountType": "Savings Account"
       },
       "createdAt": "2026-01-15T09:45:00.000Z",
-      "updatedAt": "2026-01-15T09:45:00.000Z"
+      "updatedAt": "2026-10-04T15:04:30.033Z"
     },
     {
       "id": "user-rahul-004",
@@ -102,9 +79,9 @@
       "panNumber": "APZRV9012M",
       "photoUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80",
       "role": "user",
-      "balance": 0,
-      "isActive": true,
-      "isDeleted": false,
+      "balance": 12500,
+      "isActive": false,
+      "isDeleted": true,
       "bankDetails": {
         "bankName": "",
         "accountHolderName": "",
@@ -137,10 +114,182 @@
       },
       "createdAt": "2026-10-04T19:05:08.922Z",
       "updatedAt": "2026-10-04T19:05:08.922Z"
+    },
+    {
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "accountHolderName": "Izazga",
+        "accountNumber": "868578996",
+        "ifscCode": "SBIN0001234",
+        "accountType": "Savings Account"
+      },
+      "fullName": "Izazga",
+      "email": "izazmolla3@gmail.com",
+      "phone": "858843577",
+      "password": "Izaz@123",
+      "aadhaarNumber": "5747 3737 3747",
+      "panNumber": "FRPHH4626B",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "id": "user-muoct8a8-89a1",
+      "role": "user",
+      "balance": 30000,
+      "isActive": false,
+      "isDeleted": false,
+      "createdAt": "2026-09-30T17:03:07.568Z",
+      "updatedAt": "2026-10-01T13:17:49.408Z"
+    },
+    {
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "accountHolderName": "Irahsd",
+        "accountNumber": "30444412064",
+        "ifscCode": "SBIN0001234",
+        "accountType": "Savings Account"
+      },
+      "fullName": "Irahsd",
+      "email": "izazm728@gmail.com",
+      "phone": "87492674",
+      "password": "Izaz@123",
+      "aadhaarNumber": "7392 5483 6472",
+      "panNumber": "GSYBE3746H",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "id": "user-mur7sqem-405r",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-02T17:06:04.846Z",
+      "updatedAt": "2026-10-02T17:06:04.846Z"
+    },
+    {
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "fullName": "Uuuu",
+      "email": "arabulsardar507@gmail.com",
+      "phone": "8478755956",
+      "password": "Izaz@123",
+      "aadhaarNumber": "8584 8676 5767",
+      "panNumber": "HSYJK6857H",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "id": "user-murgvz2t-anxs",
+      "role": "user",
+      "balance": 50000,
+      "isActive": true,
+      "isDeleted": false,
+      "createdAt": "2026-10-02T21:20:32.599Z",
+      "updatedAt": "2026-10-02T21:21:07.692Z"
+    },
+    {
+      "id": "user-suman-001",
+      "fullName": "SUMAN KUMAR SIHNA",
+      "email": "sss8910642@gmail.com",
+      "phone": "+91 95089 65002",
+      "password": "User@123",
+      "aadhaarNumber": "3363 7382 4038",
+      "panNumber": "DUWHH7280L",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "",
+        "accountHolderName": "",
+        "accountNumber": "",
+        "ifscCode": "",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-10-04T19:00:00.000Z",
+      "updatedAt": "2026-10-04T19:00:00.000Z"
     }
   ],
   "transactions": [],
-  "withdrawals": [],
-  "notifications": [],
-  "lastUpdated": "2026-10-04T19:05:08.922Z"
+  "withdrawals": [
+    {
+      "id": "wdr-201",
+      "userId": "user-sakib-002",
+      "userName": "Sakib Khan",
+      "userEmail": "sakib786gf@gmail.com",
+      "userPhone": "+91 98765 43210",
+      "amount": 15000,
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "accountHolderName": "Sakib Khan",
+        "accountNumber": "38947281920",
+        "ifscCode": "SBIN0001234",
+        "accountType": "Savings Account"
+      },
+      "status": "approved",
+      "utrNumber": "UTR-MET-20260228-0814",
+      "requestedAt": "2026-10-04T15:05:22.952Z",
+      "processedAt": "2026-10-04T15:17:22.958Z"
+    },
+    {
+      "id": "wdr-202",
+      "userId": "user-priya-003",
+      "userName": "Priya Sharma",
+      "userEmail": "priya.s@metal.in",
+      "userPhone": "+91 91234 56789",
+      "amount": 8000,
+      "bankDetails": {
+        "bankName": "ICICI Bank",
+        "accountHolderName": "Priya Sharma",
+        "accountNumber": "001101567890",
+        "ifscCode": "ICIC0000011",
+        "accountType": "Savings Account"
+      },
+      "status": "approved",
+      "utrNumber": "UTR-MET-20260228-0912",
+      "adminRemark": "Verified and processed via IMPS Settlement",
+      "requestedAt": "2026-10-02T19:05:22.958Z",
+      "processedAt": "2026-10-03T07:05:22.958Z",
+      "processedBy": "izaz786@metal.com"
+    },
+    {
+      "id": "wdr-203",
+      "userId": "user-rahul-004",
+      "userName": "Rahul Varma",
+      "userEmail": "rahul.v@metal.in",
+      "userPhone": "+91 94567 89012",
+      "amount": 25000,
+      "bankDetails": {
+        "bankName": "Punjab National Bank",
+        "accountHolderName": "Rahul Varma",
+        "accountNumber": "0624000100987654",
+        "ifscCode": "PUNB0062400",
+        "accountType": "Savings Account"
+      },
+      "status": "rejected",
+      "adminRemark": "Account was marked inactive. Funds restored.",
+      "requestedAt": "2026-09-30T19:05:22.958Z",
+      "processedAt": "2026-10-01T19:05:22.958Z",
+      "processedBy": "izaz786@metal.com"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-2",
+      "userId": "user-sakib-002",
+      "title": "Bank Withdrawal Successful",
+      "message": "Your withdrawal of ₹15,000 to SBI Savings Account was settled successfully.",
+      "type": "info",
+      "isRead": false,
+      "createdAt": "2026-10-04T15:05:22.958Z"
+    },
+    {
+      "id": "notif-3",
+      "userId": "admin-izaz-001",
+      "title": "Settlement Notification",
+      "message": "Settlement desk status verified.",
+      "type": "alert",
+      "isRead": false,
+      "createdAt": "2026-10-04T15:05:22.958Z"
+    }
+  ],
+  "lastUpdated": "2026-10-04T20:22:58.309Z"
 }

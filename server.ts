@@ -33,6 +33,29 @@ const INITIAL_USERS = [
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
   {
+    id: 'user-suman-001',
+    fullName: 'SUMAN KUMAR SIHNA',
+    email: 'sss8910642@gmail.com',
+    phone: '+91 95089 65002',
+    password: 'User@123',
+    aadhaarNumber: '3363 7382 4038',
+    panNumber: 'DUWHH7280L',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-04T19:00:00.000Z',
+    updatedAt: '2026-10-04T19:00:00.000Z',
+  },
+  {
     id: 'user-sakib-002',
     fullName: 'Sakib Khan',
     email: 'sakib786gf@gmail.com',
@@ -54,29 +77,6 @@ const INITIAL_USERS = [
     },
     createdAt: '2026-01-10T11:20:00.000Z',
     updatedAt: '2026-01-10T11:20:00.000Z',
-  },
-  {
-    id: 'user-ss-8910642',
-    fullName: 'Sakib (SS Metal User)',
-    email: 'ss8910642@gmail.com',
-    phone: '+91 89106 42786',
-    password: 'User@123',
-    aadhaarNumber: '8910 6420 5647',
-    panNumber: 'SSPAN5647M',
-    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-02-01T10:00:00.000Z',
-    updatedAt: '2026-02-01T10:00:00.000Z',
   },
   {
     id: 'user-priya-003',
@@ -139,12 +139,16 @@ function getDatabase() {
     }
     if (fs.existsSync(DB_FILE)) {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-      // Ensure INITIAL_USERS are present
       if (Array.isArray(data.users)) {
-        for (const initUser of INITIAL_USERS) {
-          if (!data.users.some((u: any) => u.email.toLowerCase() === initUser.email.toLowerCase())) {
-            data.users.push(initUser);
-          }
+        // Permanently filter out SS Metal user per user instruction
+        data.users = data.users.filter(
+          (u: any) =>
+            u.id !== 'user-ss-8910642' &&
+            (!u.email || u.email.toLowerCase() !== 'ss8910642@gmail.com')
+        );
+        // Ensure Admin always exists
+        if (!data.users.some((u: any) => u.email.toLowerCase() === INITIAL_USERS[0].email.toLowerCase())) {
+          data.users.unshift(INITIAL_USERS[0]);
         }
       }
       return data;

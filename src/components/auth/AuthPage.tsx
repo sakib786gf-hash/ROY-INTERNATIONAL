@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { StorageService, DEFAULT_ADMIN } from '../../services/storage';
 import { CloudSync } from '../../services/cloudSync';
 import { User } from '../../types';
-import { RegisterModal } from './RegisterModal';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface AuthPageProps {
   onSuccess: (user: User) => void;
@@ -14,12 +14,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [inactiveUser, setInactiveUser] = useState<User | null>(null);
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessNotice(null);
     setInactiveUser(null);
 
     const cleanInput = userId.trim().toLowerCase();
@@ -120,9 +122,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 4. If account does not exist yet: open Register Modal prefilled so user can enter their Full Name!
-    setError(`Account not found for "${userId}". Please enter your Full Name to register this account.`);
-    setIsRegisterOpen(true);
+    // If account does not exist in system
+    setError(`No account found for "${userId}". If you need to reset your password, click "Forgot Password" below.`);
   };
 
   const handleReactivate = () => {
@@ -166,6 +167,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             LOGIN
           </div>
         </div>
+
+        {/* Success Notice */}
+        {successNotice && (
+          <div className="mb-5 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <span className="font-semibold">{successNotice}</span>
+          </div>
+        )}
 
         {/* Error message */}
         {error && (
@@ -239,33 +248,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
           </button>
         </form>
 
-        {/* User Registration Link */}
+        {/* FORGOT PASSWORD SECTION (Exact as requested: Registration removed, Forgot Password in English only) */}
         <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
-          <p className="text-xs text-slate-400">
-            নতুন আইডি খুলতে চান?{' '}
-            <button
-              type="button"
-              onClick={() => setIsRegisterOpen(true)}
-              className="text-[#65ff00] font-bold hover:underline cursor-pointer ml-1 inline-flex items-center gap-1"
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>নতুন একাউন্ট রেজিস্টার করুন</span>
-            </button>
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setIsForgotPasswordOpen(true);
+            }}
+            className="text-xs text-slate-400 hover:text-[#65ff00] font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 group"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-[#65ff00] group-hover:rotate-45 transition-transform" />
+            <span>Forgot Password</span>
+          </button>
         </div>
       </div>
 
-      {/* User Self Registration Modal */}
-      <RegisterModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        onSuccess={(newUser) => {
-          setIsRegisterOpen(false);
-          onSuccess(newUser);
+      {/* Forgot Password Modal (User resets password using their User ID) */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        onSuccess={(email, newPass) => {
+          setUserId(email);
+          setPassword(newPass);
+          setSuccessNotice('Password successfully changed! Click "Open Account" to continue.');
         }}
-        initialEmail={userId.includes('@') ? userId.trim() : ''}
-        initialPassword={password.trim()}
-        isAdmin={false}
+        initialUserId={userId.trim()}
       />
     </div>
   );
