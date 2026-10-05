@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, KeyRound, UserPlus } from 'lucide-react';
 import { StorageService, DEFAULT_ADMIN } from '../../services/storage';
 import { CloudSync } from '../../services/cloudSync';
 import { User } from '../../types';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
+import { RegisterModal } from './RegisterModal';
 
 interface AuthPageProps {
   onSuccess: (user: User) => void;
@@ -17,6 +18,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [inactiveUser, setInactiveUser] = useState<User | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,17 +332,33 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             </div>
           </div>
 
-          {/* Big Neon Green Button: Open Account → */}
-          <button
-            type="submit"
-            className="w-full mt-3 py-3.5 px-4 rounded-2xl bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold text-sm shadow-xl shadow-[#65ff00]/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
-          >
-            <span>Open Account</span>
-            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-          </button>
+          {/* Action Buttons: Open Account (লগইন/ঢুকুন) and Create Account (ক্রিয়েট একাউন্ট) side by side */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <button
+              type="submit"
+              className="py-3.5 px-3 rounded-2xl bg-[#65ff00] hover:bg-[#57de00] text-black font-extrabold text-xs sm:text-sm shadow-xl shadow-[#65ff00]/20 flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-[0.99]"
+              title="Open Account / Log In"
+            >
+              <span>Open Account</span>
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setIsRegisterOpen(true);
+              }}
+              className="py-3.5 px-3 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold text-xs sm:text-sm border border-slate-700 hover:border-emerald-500/50 shadow-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-[0.99]"
+              title="Create New Account"
+            >
+              <UserPlus className="w-4 h-4 text-[#65ff00]" />
+              <span>Create Account</span>
+            </button>
+          </div>
         </form>
 
-        {/* FORGOT PASSWORD SECTION (Exact as requested: Registration removed, Forgot Password in English only) */}
+        {/* FORGOT PASSWORD SECTION */}
         <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
           <button
             type="button"
@@ -366,6 +384,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
           setSuccessNotice('Password successfully changed! Click "Open Account" to continue.');
         }}
         initialUserId={userId.trim()}
+      />
+
+      {/* Register Modal for Create Account */}
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSuccess={(newUser) => {
+          setIsRegisterOpen(false);
+          setUserId(newUser.email);
+          setPassword(newUser.password || '');
+          onSuccess(newUser);
+        }}
+        onSwitchToLogin={() => setIsRegisterOpen(false)}
+        isAdmin={false}
       />
     </div>
   );
