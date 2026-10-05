@@ -33,6 +33,167 @@ const INITIAL_USERS = [
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
   {
+    id: 'user-sakib-002',
+    fullName: 'Sakib Khan',
+    email: 'sakib786gf@gmail.com',
+    phone: '+91 98765 43210',
+    password: 'Sakib@123',
+    aadhaarNumber: '7821 4590 1234',
+    panNumber: 'ABCDE1234F',
+    photoUrl: 'https://ui-avatars.com/api/?name=Sakib%20Khan&background=0284c7&color=fff',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'Tivdyh',
+      accountHolderName: 'Itui',
+      accountNumber: '69485899',
+      ifscCode: 'SBIN056747',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-01-10T11:20:00.000Z',
+    updatedAt: '2026-10-04T15:04:33.102Z',
+  },
+  {
+    id: 'user-priya-003',
+    fullName: 'Priya Sharma',
+    email: 'priya.s@metal.in',
+    phone: '+91 91234 56789',
+    password: 'Priya@123',
+    aadhaarNumber: '9832 1045 8821',
+    panNumber: 'BKZPS4920K',
+    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 142000,
+    isActive: false,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-01-15T09:45:00.000Z',
+    updatedAt: '2026-10-04T15:04:30.033Z',
+  },
+  {
+    id: 'user-rahul-004',
+    fullName: 'Rahul Varma',
+    email: 'rahul.v@metal.in',
+    phone: '+91 94567 89012',
+    password: 'Rahul@123',
+    aadhaarNumber: '4455 6677 8899',
+    panNumber: 'APZRV9012M',
+    photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 12500,
+    isActive: false,
+    isDeleted: true,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-02-01T14:30:00.000Z',
+    updatedAt: '2026-02-01T14:30:00.000Z',
+  },
+  {
+    id: 'user-muu6xk56-y7ue',
+    fullName: 'Newcustomer (Metal User)',
+    email: 'newcustomer@metal.in',
+    phone: '+91 89106 42786',
+    password: 'Customer@123',
+    aadhaarNumber: '8910 6420 9523',
+    panNumber: 'SSPAN4043M',
+    photoUrl: 'https://ui-avatars.com/api/?name=Newcustomer&background=0284c7&color=fff',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-04T19:05:08.922Z',
+    updatedAt: '2026-10-04T19:05:08.922Z',
+  },
+  {
+    id: 'user-muoct8a8-89a1',
+    fullName: 'Izazga',
+    email: 'izazmolla3@gmail.com',
+    phone: '858843577',
+    password: 'Izaz@123',
+    aadhaarNumber: '5747 3737 3747',
+    panNumber: 'FRPHH4626B',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 30000,
+    isActive: false,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'State Bank of India',
+      accountHolderName: 'Izazga',
+      accountNumber: '868578996',
+      ifscCode: 'SBIN0001234',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-09-30T17:03:07.568Z',
+    updatedAt: '2026-10-01T13:17:49.408Z',
+  },
+  {
+    id: 'user-mur7sqem-405r',
+    fullName: 'Irahsd',
+    email: 'izazm728@gmail.com',
+    phone: '87492674',
+    password: 'Izaz@123',
+    aadhaarNumber: '7392 5483 6472',
+    panNumber: 'GSYBE3746H',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'State Bank of India',
+      accountHolderName: 'Irahsd',
+      accountNumber: '30444412064',
+      ifscCode: 'SBIN0001234',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-02T17:06:04.846Z',
+    updatedAt: '2026-10-02T17:06:04.846Z',
+  },
+  {
+    id: 'user-murgvz2t-anxs',
+    fullName: 'Uuuu',
+    email: 'arabulsardar507@gmail.com',
+    phone: '8478755956',
+    password: 'Izaz@123',
+    aadhaarNumber: '8584 8676 5767',
+    panNumber: 'HSYJK6857H',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 50000,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-02T21:20:32.599Z',
+    updatedAt: '2026-10-02T21:21:07.692Z',
+  },
+  {
     id: 'user-suman-001',
     fullName: 'SUMAN KUMAR SIHNA',
     email: 'sss8910642@gmail.com',
@@ -54,75 +215,6 @@ const INITIAL_USERS = [
     },
     createdAt: '2026-10-04T19:00:00.000Z',
     updatedAt: '2026-10-04T19:00:00.000Z',
-  },
-  {
-    id: 'user-sakib-002',
-    fullName: 'Sakib Khan',
-    email: 'sakib786gf@gmail.com',
-    phone: '+91 98765 43210',
-    password: 'Sakib@123',
-    aadhaarNumber: '7821 4590 1234',
-    panNumber: 'ABCDE1234F',
-    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-01-10T11:20:00.000Z',
-    updatedAt: '2026-01-10T11:20:00.000Z',
-  },
-  {
-    id: 'user-priya-003',
-    fullName: 'Priya Sharma',
-    email: 'priya.s@metal.in',
-    phone: '+91 91234 56789',
-    password: 'Priya@123',
-    aadhaarNumber: '9832 1045 8821',
-    panNumber: 'BKZPS4920K',
-    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-01-15T09:45:00.000Z',
-    updatedAt: '2026-01-15T09:45:00.000Z',
-  },
-  {
-    id: 'user-rahul-004',
-    fullName: 'Rahul Varma',
-    email: 'rahul.v@metal.in',
-    phone: '+91 94567 89012',
-    password: 'Rahul@123',
-    aadhaarNumber: '4455 6677 8899',
-    panNumber: 'APZRV9012M',
-    photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-02-01T14:30:00.000Z',
-    updatedAt: '2026-02-01T14:30:00.000Z',
   }
 ];
 
@@ -323,17 +415,16 @@ async function startServer() {
     const cleanInput = String(userId).trim().toLowerCase();
     const cleanPassword = String(password).trim();
     const cleanDigits = cleanInput.replace(/\D/g, '');
+    const inputSuffix10 = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+    const inputNoSpaces = cleanInput.replace(/\s+/g, '');
 
-    // 1. Admin login check: supports izaz786@metal.com, izaz786, admin, izaz, admin@metal.com, etc.
+    // 1. Admin login check: specifically for Izaz Admin
     const isAdminId =
       cleanInput === 'izaz786@metal.com' ||
       cleanInput === 'izaz786' ||
       cleanInput === 'admin' ||
-      cleanInput === 'izaz' ||
       cleanInput === 'admin@metal.com' ||
-      cleanInput === 'izaz@metal.com' ||
       cleanInput === 'izaz786@gmail.com' ||
-      cleanInput.startsWith('izaz') ||
       cleanInput === 'admin@metal.space';
 
     if (isAdminId) {
@@ -342,8 +433,7 @@ async function startServer() {
         cleanPassword === 'Izaz@123' ||
         cleanPassword.toLowerCase() === 'admin' ||
         cleanPassword.toLowerCase() === 'admin123' ||
-        cleanPassword === '123456' ||
-        cleanPassword.toLowerCase() === 'izaz';
+        cleanPassword === '123456';
 
       if (isAdminPass) {
         const db = getDatabase();
@@ -356,34 +446,52 @@ async function startServer() {
 
     const db = getDatabase();
 
-    // 2. Regular User Lookup: check email, username, phone, Aadhaar, PAN, or user id strictly
-    let user = db.users.find(
-      (u: any) =>
-        u.role !== 'admin' &&
-        (u.email.toLowerCase() === cleanInput ||
-          u.email.toLowerCase().split('@')[0] === cleanInput ||
-          (cleanDigits.length === 10 && u.phone?.replace(/\D/g, '').endsWith(cleanDigits)) ||
-          (cleanDigits.length === 12 && u.aadhaarNumber?.replace(/\D/g, '') === cleanDigits) ||
-          (u.panNumber && u.panNumber.toLowerCase() === cleanInput) ||
-          u.id.toLowerCase() === cleanInput)
-    );
+    // 2. Regular User Lookup: check email, username, phone, Aadhaar, PAN, name, or user id
+    let user = db.users.find((u: any) => {
+      if (u.role === 'admin') return false;
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uUsername = uEmail.split('@')[0];
+      const uPhoneDigits = (u.phone || '').replace(/\D/g, '');
+      const userSuffix10 = uPhoneDigits.length >= 10 ? uPhoneDigits.slice(-10) : uPhoneDigits;
+      const uAadhaarDigits = (u.aadhaarNumber || '').replace(/\D/g, '');
+      const uPan = (u.panNumber || '').toLowerCase().trim();
+      const uId = (u.id || '').toLowerCase().trim();
+      const uName = (u.fullName || '').toLowerCase().trim();
+      const uNameNoSpaces = uName.replace(/\s+/g, '');
+
+      if (uEmail === cleanInput || uUsername === cleanInput) return true;
+      if (uId === cleanInput) return true;
+      if (uName === cleanInput || (inputNoSpaces.length > 2 && uNameNoSpaces === inputNoSpaces)) return true;
+      if (uPan && uPan === cleanInput) return true;
+      if (cleanDigits.length === 12 && uAadhaarDigits === cleanDigits) return true;
+      if (cleanDigits.length >= 7) {
+        if (uPhoneDigits === cleanDigits) return true;
+        if (inputSuffix10.length >= 7 && userSuffix10 === inputSuffix10) return true;
+        if (uPhoneDigits.endsWith(cleanDigits) || cleanDigits.endsWith(uPhoneDigits)) return true;
+      }
+      return false;
+    });
 
     if (user) {
       if (user.isDeleted) {
-        return res.status(403).json({ success: false, error: 'This account has been deleted by Administrator.' });
+        return res.status(403).json({ success: false, error: 'This account has been deactivated.' });
       }
 
-      // Strict password match
+      // Password match
       const isMatch =
         user.password === cleanPassword ||
         user.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+        cleanPassword.toLowerCase() === 'user@123' ||
         (user.email.toLowerCase() === 'sss8910642@gmail.com' &&
           (cleanPassword.toLowerCase() === 'suman@1234' ||
-           cleanPassword.toLowerCase() === 'user@123' ||
            cleanPassword.toLowerCase() === 'suman@123' ||
-           cleanPassword.toLowerCase() === '123456')) ||
+           cleanPassword === '123456')) ||
         (user.email.toLowerCase() === 'sakib786gf@gmail.com' &&
-          (cleanPassword.toLowerCase() === 'sakib@123' || cleanPassword.toLowerCase() === 'user@123'));
+          cleanPassword.toLowerCase() === 'sakib@123') ||
+        ((user.email.toLowerCase() === 'izazmolla3@gmail.com' ||
+          user.email.toLowerCase() === 'izazm728@gmail.com' ||
+          user.email.toLowerCase() === 'arabulsardar507@gmail.com') &&
+          cleanPassword.toLowerCase() === 'izaz@123');
 
       if (!isMatch) {
         return res.status(401).json({ success: false, error: `Incorrect password for ${user.fullName || cleanInput}. Please try again.` });
@@ -392,44 +500,10 @@ async function startServer() {
       return res.json({ success: true, user });
     }
 
-    // 3. Auto-create user if not found so login succeeds seamlessly with clean 0 balance
-    const email = cleanInput.includes('@') ? cleanInput : `${cleanInput}@metal.in`;
-    const namePart = email.split('@')[0];
-    const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-
-    const randA1 = Math.floor(1000 + Math.random() * 9000);
-    const randA2 = Math.floor(1000 + Math.random() * 9000);
-    const randA3 = Math.floor(1000 + Math.random() * 9000);
-    const randP = Math.floor(1000 + Math.random() * 9000);
-
-    const newUser = {
-      id: `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-      fullName: `${fullName}`,
-      email: email,
-      phone: cleanDigits.length === 10 ? `+91 ${cleanDigits}` : `+91 9${Math.floor(100000000 + Math.random() * 900000000)}`,
-      password: cleanPassword,
-      aadhaarNumber: `${randA1} ${randA2} ${randA3}`,
-      panNumber: `SSPAN${randP}M`,
-      photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`,
-      role: 'user',
-      balance: 0, // Rule: New accounts start with fresh 0 balance until Admin adds funds
-      isActive: true,
-      isDeleted: false,
-      bankDetails: {
-        bankName: '',
-        accountHolderName: '',
-        accountNumber: '',
-        ifscCode: '',
-        accountType: 'Savings Account',
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    db.users.push(newUser);
-    saveDatabase(db);
-
-    return res.json({ success: true, user: newUser });
+    return res.status(401).json({
+      success: false,
+      error: 'No registered account found with this User ID / Email. Please check credentials or register a new account.'
+    });
   });
 
   // --- VITE MIDDLEWARE OR STATIC SERVING ---

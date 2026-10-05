@@ -47,11 +47,172 @@ export const DEFAULT_ADMIN: User = {
 const INITIAL_USERS: User[] = [
   DEFAULT_ADMIN,
   {
+    id: 'user-sakib-002',
+    fullName: 'Sakib Khan',
+    email: 'sakib786gf@gmail.com',
+    phone: '+91 98765 43210',
+    password: 'Sakib@123',
+    aadhaarNumber: '7821 4590 1234',
+    panNumber: 'ABCDE1234F',
+    photoUrl: 'https://ui-avatars.com/api/?name=Sakib%20Khan&background=0284c7&color=fff',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'Tivdyh',
+      accountHolderName: 'Itui',
+      accountNumber: '69485899',
+      ifscCode: 'SBIN056747',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-01-10T11:20:00.000Z',
+    updatedAt: '2026-10-04T15:04:33.102Z',
+  },
+  {
+    id: 'user-priya-003',
+    fullName: 'Priya Sharma',
+    email: 'priya.s@metal.in',
+    phone: '+91 91234 56789',
+    password: 'Priya@123',
+    aadhaarNumber: '9832 1045 8821',
+    panNumber: 'BKZPS4920K',
+    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 142000,
+    isActive: false,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-01-15T09:45:00.000Z',
+    updatedAt: '2026-10-04T15:04:30.033Z',
+  },
+  {
+    id: 'user-rahul-004',
+    fullName: 'Rahul Varma',
+    email: 'rahul.v@metal.in',
+    phone: '+91 94567 89012',
+    password: 'Rahul@123',
+    aadhaarNumber: '4455 6677 8899',
+    panNumber: 'APZRV9012M',
+    photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 12500,
+    isActive: false,
+    isDeleted: true,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-02-01T14:30:00.000Z',
+    updatedAt: '2026-02-01T14:30:00.000Z',
+  },
+  {
+    id: 'user-muu6xk56-y7ue',
+    fullName: 'Newcustomer (Metal User)',
+    email: 'newcustomer@metal.in',
+    phone: '+91 89106 42786',
+    password: 'Customer@123',
+    aadhaarNumber: '8910 6420 9523',
+    panNumber: 'SSPAN4043M',
+    photoUrl: 'https://ui-avatars.com/api/?name=Newcustomer&background=0284c7&color=fff',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-04T19:05:08.922Z',
+    updatedAt: '2026-10-04T19:05:08.922Z',
+  },
+  {
+    id: 'user-muoct8a8-89a1',
+    fullName: 'Izazga',
+    email: 'izazmolla3@gmail.com',
+    phone: '858843577',
+    password: 'Izaz@123',
+    aadhaarNumber: '5747 3737 3747',
+    panNumber: 'FRPHH4626B',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 30000,
+    isActive: false,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'State Bank of India',
+      accountHolderName: 'Izazga',
+      accountNumber: '868578996',
+      ifscCode: 'SBIN0001234',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-09-30T17:03:07.568Z',
+    updatedAt: '2026-10-01T13:17:49.408Z',
+  },
+  {
+    id: 'user-mur7sqem-405r',
+    fullName: 'Irahsd',
+    email: 'izazm728@gmail.com',
+    phone: '87492674',
+    password: 'Izaz@123',
+    aadhaarNumber: '7392 5483 6472',
+    panNumber: 'GSYBE3746H',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 0,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: 'State Bank of India',
+      accountHolderName: 'Irahsd',
+      accountNumber: '30444412064',
+      ifscCode: 'SBIN0001234',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-02T17:06:04.846Z',
+    updatedAt: '2026-10-02T17:06:04.846Z',
+  },
+  {
+    id: 'user-murgvz2t-anxs',
+    fullName: 'Uuuu',
+    email: 'arabulsardar507@gmail.com',
+    phone: '8478755956',
+    password: 'Izaz@123',
+    aadhaarNumber: '8584 8676 5767',
+    panNumber: 'HSYJK6857H',
+    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    role: 'user',
+    balance: 50000,
+    isActive: true,
+    isDeleted: false,
+    bankDetails: {
+      bankName: '',
+      accountHolderName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountType: 'Savings Account',
+    },
+    createdAt: '2026-10-02T21:20:32.599Z',
+    updatedAt: '2026-10-02T21:21:07.692Z',
+  },
+  {
     id: 'user-suman-001',
     fullName: 'SUMAN KUMAR SIHNA',
     email: 'sss8910642@gmail.com',
     phone: '+91 95089 65002',
-    password: 'Suman@1234',
+    password: 'User@123',
     aadhaarNumber: '3363 7382 4038',
     panNumber: 'DUWHH7280L',
     photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
@@ -70,73 +231,27 @@ const INITIAL_USERS: User[] = [
     updatedAt: '2026-10-04T19:00:00.000Z',
   },
   {
-    id: 'user-sakib-002',
-    fullName: 'Sakib Khan',
-    email: 'sakib786gf@gmail.com',
-    phone: '+91 98765 43210',
-    password: 'Sakib@123',
-    aadhaarNumber: '7821 4590 1234',
-    panNumber: 'ABCDE1234F',
-    photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+    id: 'user-alok-005',
+    fullName: 'Alok Food Service',
+    email: 'alokfoodservice@gmail.com',
+    phone: '+91 98765 12345',
+    password: 'User@123',
+    aadhaarNumber: '6789 1234 5678',
+    panNumber: 'ALOKP1234M',
+    photoUrl: 'https://ui-avatars.com/api/?name=Alok+Food+Service&background=0284c7&color=fff',
     role: 'user',
     balance: 0,
     isActive: true,
     isDeleted: false,
     bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
+      bankName: 'State Bank of India',
+      accountHolderName: 'Alok Food Service',
+      accountNumber: '38920194820',
+      ifscCode: 'SBIN0001234',
       accountType: 'Savings Account',
     },
-    createdAt: '2026-01-10T11:20:00.000Z',
-    updatedAt: '2026-01-10T11:20:00.000Z',
-  },
-  {
-    id: 'user-priya-003',
-    fullName: 'Priya Sharma',
-    email: 'priya.s@metal.in',
-    phone: '+91 91234 56789',
-    password: 'Priya@123',
-    aadhaarNumber: '9832 1045 8821',
-    panNumber: 'BKZPS4920K',
-    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-01-15T09:45:00.000Z',
-    updatedAt: '2026-01-15T09:45:00.000Z',
-  },
-  {
-    id: 'user-rahul-004',
-    fullName: 'Rahul Varma',
-    email: 'rahul.v@metal.in',
-    phone: '+91 94567 89012',
-    password: 'Rahul@123',
-    aadhaarNumber: '4455 6677 8899',
-    panNumber: 'APZRV9012M',
-    photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
-    role: 'user',
-    balance: 0,
-    isActive: true,
-    isDeleted: false,
-    bankDetails: {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      ifscCode: '',
-      accountType: 'Savings Account',
-    },
-    createdAt: '2026-02-01T14:30:00.000Z',
-    updatedAt: '2026-02-01T14:30:00.000Z',
+    createdAt: '2026-10-05T08:00:00.000Z',
+    updatedAt: '2026-10-05T08:00:00.000Z',
   }
 ];
 
@@ -228,31 +343,40 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 
 // Helper to ensure every user has complete, safe properties preventing undefined errors
 export const normalizeUser = (raw: any): User => {
-  const id = raw?.id || `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
-  const fullName = (raw?.fullName || 'User').trim();
-  const email = (raw?.email || '').toLowerCase().trim();
-  const phone = (raw?.phone || '').trim();
+  const id = raw?.id || raw?.i || `user-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  const fullName = (raw?.fullName || raw?.name || raw?.n || 'User').trim();
+  const email = (raw?.email || raw?.e || '').toLowerCase().trim();
+  const phone = (raw?.phone || raw?.p || '').trim();
   const photoUrl = raw?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
 
   const bankDetails: User['bankDetails'] = {
-    bankName: raw?.bankDetails?.bankName || 'State Bank of India',
-    accountHolderName: raw?.bankDetails?.accountHolderName || fullName,
-    accountNumber: raw?.bankDetails?.accountNumber || '',
-    ifscCode: raw?.bankDetails?.ifscCode || 'SBIN0001234',
-    accountType: raw?.bankDetails?.accountType || 'Savings Account',
+    bankName: raw?.bankDetails?.bankName || raw?.bank?.bankName || raw?.bank?.name || 'State Bank of India',
+    accountHolderName: raw?.bankDetails?.accountHolderName || raw?.bank?.accountHolderName || fullName,
+    accountNumber: raw?.bankDetails?.accountNumber || raw?.bank?.accountNumber || raw?.bank?.acc || '',
+    ifscCode: raw?.bankDetails?.ifscCode || raw?.bank?.ifscCode || 'SBIN0001234',
+    accountType: raw?.bankDetails?.accountType || raw?.bank?.accountType || 'Savings Account',
   };
+
+  const password = raw?.password || raw?.pass || raw?.w || 'User@123';
+  const aadhaarNumber = raw?.aadhaarNumber || raw?.aadh || raw?.a || 'Not Provided';
+  const panNumber = raw?.panNumber || raw?.pan || raw?.m || 'NOTPROVIDED';
+  const balance = typeof raw?.balance === 'number' && !isNaN(raw.balance)
+    ? raw.balance
+    : (typeof raw?.bal === 'number' && !isNaN(raw.bal)
+      ? raw.bal
+      : (typeof raw?.b === 'number' && !isNaN(raw.b) ? raw.b : 0));
 
   return {
     id,
     fullName,
     email,
     phone,
-    password: raw?.password || 'User@123',
-    aadhaarNumber: raw?.aadhaarNumber || 'Not Provided',
-    panNumber: raw?.panNumber || 'NOTPROVIDED',
+    password,
+    aadhaarNumber,
+    panNumber,
     photoUrl,
-    role: raw?.role === 'admin' ? 'admin' : 'user',
-    balance: typeof raw?.balance === 'number' && !isNaN(raw.balance) ? raw.balance : 0,
+    role: raw?.role === 'admin' || raw?.r === 'admin' ? 'admin' : 'user',
+    balance,
     isActive: raw?.isActive !== false,
     isDeleted: raw?.isDeleted === true,
     bankDetails,
@@ -420,7 +544,16 @@ export const StorageService = {
               local.push(normalizedServerUser);
               changed = true;
             } else {
-              local[idx] = normalizeUser({ ...local[idx], ...normalizedServerUser });
+              const existingPass = local[idx].password;
+              const incomingPass = normalizedServerUser.password;
+              const preservedPass = (incomingPass && incomingPass !== 'User@123') ? incomingPass : (existingPass || incomingPass);
+
+              local[idx] = normalizeUser({
+                ...local[idx],
+                ...normalizedServerUser,
+                password: preservedPass,
+                bankDetails: (normalizedServerUser.bankDetails && normalizedServerUser.bankDetails.accountNumber) ? normalizedServerUser.bankDetails : (local[idx].bankDetails || normalizedServerUser.bankDetails),
+              });
               changed = true;
             }
           }

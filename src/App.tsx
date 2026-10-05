@@ -69,18 +69,10 @@ export default function App() {
 
     window.addEventListener('metal_wallet_data_changed', handleDataChanged);
     window.addEventListener('focus', handleFocus);
-    
-    // Periodic background sync every 12 seconds
-    const interval = setInterval(() => {
-      StorageService.syncWithServer().then(() => {
-        refreshAllData();
-      });
-    }, 12000);
 
     return () => {
       window.removeEventListener('metal_wallet_data_changed', handleDataChanged);
       window.removeEventListener('focus', handleFocus);
-      clearInterval(interval);
     };
   }, [refreshAllData]);
 

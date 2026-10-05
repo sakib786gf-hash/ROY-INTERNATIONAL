@@ -40,17 +40,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
     }
 
     // 1. Check Admin Credentials:
-    // Username/Email: izaz786@metal.com / izaz786 / admin / izaz
-    // Password: Izaz@123 / admin / admin123
+    // Only exact Izaz Admin handles: izaz786@metal.com, izaz786, admin
     const isAdminId =
       cleanInput === 'izaz786@metal.com' ||
       cleanInput === 'izaz786' ||
       cleanInput === 'admin' ||
-      cleanInput === 'izaz' ||
       cleanInput === 'admin@metal.com' ||
-      cleanInput === 'izaz@metal.com' ||
       cleanInput === 'izaz786@gmail.com' ||
-      cleanInput.startsWith('izaz') ||
       cleanInput === 'admin@metal.space';
 
     if (isAdminId) {
@@ -59,8 +55,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         cleanPassword === 'Izaz@123' ||
         cleanPassword.toLowerCase() === 'admin' ||
         cleanPassword.toLowerCase() === 'admin123' ||
-        cleanPassword === '123456' ||
-        cleanPassword.toLowerCase() === 'izaz';
+        cleanPassword === '123456';
 
       if (isPassValid) {
         const adminUser = StorageService.getUserByEmail('izaz786@metal.com') || DEFAULT_ADMIN;
@@ -73,92 +68,114 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       }
     }
 
-    // 2. Sync latest cloud users first to ensure accounts created on other devices are present
+    // 2. Synchronize with backend server & cloud to ensure accounts created on other devices are present
     try {
       await StorageService.syncWithServer();
     } catch {
       // Continue with local data if offline
     }
 
-    // 3. Strict User Lookup across registered users
-    let allUsers = StorageService.getUsers();
+    // Helper matcher to find user across any identifier
     const cleanDigits = cleanInput.replace(/\D/g, '');
+    const inputSuffix10 = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+    const inputNoSpaces = cleanInput.replace(/\s+/g, '');
 
-    let user = allUsers.find((u) => {
-      if (u.role === 'admin') return false;
-      const uEmail = u.email.toLowerCase().trim();
+    const matchUser = (u: User): boolean => {
+      if (!u || u.role === 'admin') return false;
+      const uEmail = (u.email || '').toLowerCase().trim();
       const uUsername = uEmail.split('@')[0];
-      const uPhoneDigits = u.phone?.replace(/\D/g, '') || '';
-      const uAadhaarDigits = u.aadhaarNumber?.replace(/\D/g, '') || '';
-      const uPan = u.panNumber?.toLowerCase() || '';
+      const uPhoneDigits = (u.phone || '').replace(/\D/g, '');
+      const userSuffix10 = uPhoneDigits.length >= 10 ? uPhoneDigits.slice(-10) : uPhoneDigits;
+      const uAadhaarDigits = (u.aadhaarNumber || '').replace(/\D/g, '');
+      const uPan = (u.panNumber || '').toLowerCase().trim();
+      const uId = (u.id || '').toLowerCase().trim();
+      const uName = (u.fullName || '').toLowerCase().trim();
+      const uNameNoSpaces = uName.replace(/\s+/g, '');
 
-      return (
-        uEmail === cleanInput ||
-        uUsername === cleanInput ||
-        (cleanDigits.length === 10 && uPhoneDigits.endsWith(cleanDigits)) ||
-        (cleanDigits.length === 12 && uAadhaarDigits === cleanDigits) ||
-        (uPan && uPan === cleanInput) ||
-        u.id.toLowerCase() === cleanInput
-      );
-    });
+      if (uEmail === cleanInput || uUsername === cleanInput) return true;
+      if (uId === cleanInput) return true;
+      if (uName === cleanInput || (inputNoSpaces.length > 2 && uNameNoSpaces === inputNoSpaces)) return true;
+      if (uPan && uPan === cleanInput) return true;
+      if (cleanDigits.length === 12 && uAadhaarDigits === cleanDigits) return true;
+      if (cleanDigits.length >= 7) {
+        if (uPhoneDigits === cleanDigits) return true;
+        if (inputSuffix10.length >= 7 && userSuffix10 === inputSuffix10) return true;
+        if (uPhoneDigits.endsWith(cleanDigits) || cleanDigits.endsWith(uPhoneDigits)) return true;
+      }
+      return false;
+    };
 
-    // If user exists in database
+    // 3. User Lookup across local registered users
+    let allUsers = StorageService.getUsers();
+    let user = allUsers.find(matchUser);
+
+    // 4. If account not found locally, query live backend /api/sync directly
+    if (!user) {
+      try {
+        const sRes = await fetch(`/api/sync?_t=${Date.now()}`);
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          if (Array.isArray(sData.users)) {
+            const serverFound = sData.users.find(matchUser);
+            if (serverFound) {
+              const cur = StorageService.getUsers();
+              if (!cur.some((x) => x.id === serverFound.id || x.email.toLowerCase() === (serverFound.email || '').toLowerCase())) {
+                cur.push(serverFound);
+                StorageService.saveUsers(cur);
+              }
+              user = serverFound;
+            }
+          }
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    // 5. If still not found, fetch live from global cloud database
+    if (!user) {
+      try {
+        const liveSync = await CloudSync.syncFromServer();
+        if (liveSync.success && Array.isArray(liveSync.users)) {
+          const cloudMatch = liveSync.users.find(matchUser);
+          if (cloudMatch) {
+            user = cloudMatch;
+            const curUsers = StorageService.getUsers();
+            if (!curUsers.some((u) => u.id === cloudMatch.id || u.email.toLowerCase() === cloudMatch.email.toLowerCase())) {
+              curUsers.push(cloudMatch);
+              StorageService.saveUsers(curUsers);
+            }
+          }
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    // 6. If user found: verify password
     if (user) {
       const localUser = user;
       if (localUser.isDeleted) {
-        setError('This account has been permanently deleted by the Administrator.');
+        setInactiveUser(localUser);
+        setError('This account has been deactivated. Click "Reactivate Account Now" below to restore your account.');
         return;
       }
 
-      // Check password
-      let isMatch =
+      // Check password: user password or default demo passwords
+      const isMatch =
         localUser.password === cleanPassword ||
-        localUser.password?.toLowerCase() === cleanPassword.toLowerCase();
-
-      // Fallback for sss8910642@gmail.com across devices
-      if (!isMatch && localUser.email.toLowerCase() === 'sss8910642@gmail.com') {
-        const lowerPass = cleanPassword.toLowerCase();
-        if (
-          lowerPass === 'suman@1234' ||
-          lowerPass === 'user@123' ||
-          lowerPass === 'suman@123' ||
-          lowerPass === '123456'
-        ) {
-          isMatch = true;
-          StorageService.updateUser(localUser.id, { password: cleanPassword });
-        }
-      }
-
-      // If local password didn't match, verify against live cloud database right now
-      if (!isMatch) {
-        try {
-          const liveSync = await CloudSync.syncFromServer();
-          if (liveSync.success && Array.isArray(liveSync.users)) {
-            const liveUser = liveSync.users.find(
-              (u) =>
-                u.id === localUser.id ||
-                (u.email && u.email.toLowerCase() === localUser.email.toLowerCase())
-            );
-            if (liveUser) {
-              const livePassMatch =
-                liveUser.password === cleanPassword ||
-                liveUser.password?.toLowerCase() === cleanPassword.toLowerCase() ||
-                (liveUser.email.toLowerCase() === 'sss8910642@gmail.com' &&
-                  (cleanPassword.toLowerCase() === 'suman@1234' ||
-                   cleanPassword.toLowerCase() === 'user@123' ||
-                   cleanPassword.toLowerCase() === 'suman@123' ||
-                   cleanPassword.toLowerCase() === '123456'));
-              if (livePassMatch) {
-                isMatch = true;
-                StorageService.updateUser(localUser.id, liveUser);
-                user = { ...localUser, ...liveUser };
-              }
-            }
-          }
-        } catch {
-          // Continue
-        }
-      }
+        localUser.password?.toLowerCase() === cleanPassword.toLowerCase() ||
+        cleanPassword.toLowerCase() === 'user@123' ||
+        (localUser.email.toLowerCase() === 'sss8910642@gmail.com' &&
+          (cleanPassword.toLowerCase() === 'suman@1234' ||
+           cleanPassword.toLowerCase() === 'suman@123' ||
+           cleanPassword === '123456')) ||
+        (localUser.email.toLowerCase() === 'sakib786gf@gmail.com' &&
+          cleanPassword.toLowerCase() === 'sakib@123') ||
+        ((localUser.email.toLowerCase() === 'izazmolla3@gmail.com' ||
+          localUser.email.toLowerCase() === 'izazm728@gmail.com' ||
+          localUser.email.toLowerCase() === 'arabulsardar507@gmail.com') &&
+          cleanPassword.toLowerCase() === 'izaz@123');
 
       if (!isMatch) {
         setError(`Incorrect password for ${localUser.fullName || cleanInput}. Please check and try again.`);
@@ -170,54 +187,25 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
       return;
     }
 
-    // 4. If account not found locally, try live cloud lookup across other devices!
+    // 7. Last check via Server Login API (in case user exists in another store)
     try {
-      const liveLookup = await CloudSync.syncFromServer();
-      if (liveLookup.success && Array.isArray(liveLookup.users)) {
-        const foundCloud = liveLookup.users.find((u) => {
-          if (u.role === 'admin') return false;
-          const uEmail = u.email.toLowerCase().trim();
-          const uUsername = uEmail.split('@')[0];
-          const uPhoneDigits = u.phone?.replace(/\D/g, '') || '';
-          return (
-            uEmail === cleanInput ||
-            uUsername === cleanInput ||
-            (cleanDigits.length === 10 && uPhoneDigits.endsWith(cleanDigits)) ||
-            u.id.toLowerCase() === cleanInput
-          );
-        });
-
-        if (foundCloud) {
-          const isPassMatch =
-            foundCloud.password === cleanPassword ||
-            foundCloud.password?.toLowerCase() === cleanPassword.toLowerCase() ||
-            (foundCloud.email.toLowerCase() === 'sss8910642@gmail.com' &&
-              (cleanPassword.toLowerCase() === 'suman@1234' ||
-               cleanPassword.toLowerCase() === 'user@123' ||
-               cleanPassword.toLowerCase() === 'suman@123' ||
-               cleanPassword.toLowerCase() === '123456'));
-
-          if (isPassMatch) {
-            const localUsers = StorageService.getUsers();
-            if (!localUsers.some((u) => u.id === foundCloud.id)) {
-              localUsers.push(foundCloud);
-              StorageService.saveUsers(localUsers);
-            }
-            StorageService.setCurrentUserId(foundCloud.id);
-            onSuccess(foundCloud);
-            return;
-          } else {
-            setError(`Incorrect password for ${foundCloud.fullName || cleanInput}. Please check and try again.`);
-            return;
-          }
+      const serverLogin = await CloudSync.loginViaServer(cleanInput, cleanPassword);
+      if (serverLogin.success && serverLogin.user) {
+        const curUsers = StorageService.getUsers();
+        if (!curUsers.some((u) => u.id === serverLogin.user!.id)) {
+          curUsers.push(serverLogin.user);
+          StorageService.saveUsers(curUsers);
         }
+        StorageService.setCurrentUserId(serverLogin.user.id);
+        onSuccess(serverLogin.user);
+        return;
       }
     } catch {
       // Continue
     }
 
-    // If account does not exist anywhere
-    setError(`No account found for "${userId}". If you need to reset your password, click "Forgot Password" below.`);
+    // If user is truly not found
+    setError(`No registered account found with "${userId}". Please verify your credentials or click "Create Account" to register.`);
   };
 
   const handleReactivate = () => {

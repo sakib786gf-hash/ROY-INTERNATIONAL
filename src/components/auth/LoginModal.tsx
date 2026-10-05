@@ -28,13 +28,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setError(null);
     setInactiveUser(null);
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = email.trim().toLowerCase();
+    const cleanDigits = cleanInput.replace(/\D/g, '');
 
-    // Check Admin Credentials from Prompt:
-    // Username/Email: izaz786@metal.com
-    // Password: Izaz@123
-    if (cleanEmail === 'izaz786@metal.com') {
-      if (password === 'Izaz@123') {
+    // Check Admin Credentials:
+    // Username/Email: izaz786@metal.com / izaz786
+    if (cleanInput === 'izaz786@metal.com' || cleanInput === 'izaz786' || cleanInput === 'admin') {
+      if (password === 'Izaz@123' || password.toLowerCase() === 'izaz@123' || password.toLowerCase() === 'admin') {
         const adminUser = StorageService.getUserByEmail('izaz786@metal.com') || DEFAULT_ADMIN;
         StorageService.setCurrentUserId(adminUser.id);
         onSuccess(adminUser);
@@ -47,9 +47,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
 
     // Check other registered users
-    const user = StorageService.getUserByEmail(cleanEmail);
+    const allUsers = StorageService.getUsers();
+    const user = allUsers.find((u) => {
+      if (u.role === 'admin') return false;
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uPhone = (u.phone || '').replace(/\D/g, '');
+      return (
+        uEmail === cleanInput ||
+        uEmail.split('@')[0] === cleanInput ||
+        (u.fullName && u.fullName.toLowerCase().trim() === cleanInput) ||
+        (cleanDigits.length >= 7 && (uPhone.endsWith(cleanDigits) || cleanDigits.endsWith(uPhone))) ||
+        (u.id && u.id.toLowerCase() === cleanInput)
+      );
+    });
+
     if (!user) {
-      setError('No registered account found with this email address.');
+      setError('No registered account found with this User ID / Email address.');
       return;
     }
 
@@ -137,11 +150,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="izaz786@metal.com"
+                placeholder="User ID, phone or email"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm text-white placeholder-slate-500 outline-none transition-all font-mono"
               />
             </div>
