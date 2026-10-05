@@ -31,20 +31,20 @@
       "password": "Sakib@123",
       "aadhaarNumber": "7821 4590 1234",
       "panNumber": "ABCDE1234F",
-      "photoUrl": "https://ui-avatars.com/api/?name=Sakib%20Khan&background=0284c7&color=fff",
+      "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
       "role": "user",
       "balance": 0,
-      "isActive": true,
+      "isActive": false,
       "isDeleted": false,
       "bankDetails": {
-        "bankName": "Tivdyh",
-        "accountHolderName": "Itui",
-        "accountNumber": "69485899",
-        "ifscCode": "SBIN056747",
+        "bankName": "State Bank of India",
+        "accountHolderName": "Sakib Khan",
+        "accountNumber": "",
+        "ifscCode": "SBIN0001234",
         "accountType": "Savings Account"
       },
       "createdAt": "2026-01-10T11:20:00.000Z",
-      "updatedAt": "2026-10-04T15:04:33.102Z"
+      "updatedAt": "2026-10-05T08:20:24.398Z"
     },
     {
       "id": "user-priya-003",
@@ -56,18 +56,18 @@
       "panNumber": "BKZPS4920K",
       "photoUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80",
       "role": "user",
-      "balance": 142000,
-      "isActive": false,
+      "balance": 0,
+      "isActive": true,
       "isDeleted": false,
       "bankDetails": {
-        "bankName": "",
-        "accountHolderName": "",
+        "bankName": "State Bank of India",
+        "accountHolderName": "Priya Sharma",
         "accountNumber": "",
-        "ifscCode": "",
+        "ifscCode": "SBIN0001234",
         "accountType": "Savings Account"
       },
       "createdAt": "2026-01-15T09:45:00.000Z",
-      "updatedAt": "2026-10-04T15:04:30.033Z"
+      "updatedAt": "2026-01-15T09:45:00.000Z"
     },
     {
       "id": "user-rahul-004",
@@ -79,14 +79,14 @@
       "panNumber": "APZRV9012M",
       "photoUrl": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80",
       "role": "user",
-      "balance": 12500,
-      "isActive": false,
-      "isDeleted": true,
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
       "bankDetails": {
-        "bankName": "",
-        "accountHolderName": "",
+        "bankName": "State Bank of India",
+        "accountHolderName": "Rahul Varma",
         "accountNumber": "",
-        "ifscCode": "",
+        "ifscCode": "SBIN0001234",
         "accountType": "Savings Account"
       },
       "createdAt": "2026-02-01T14:30:00.000Z",
@@ -189,7 +189,7 @@
       "fullName": "SUMAN KUMAR SIHNA",
       "email": "sss8910642@gmail.com",
       "phone": "+91 95089 65002",
-      "password": "User@123",
+      "password": "Suman@1234",
       "aadhaarNumber": "3363 7382 4038",
       "panNumber": "DUWHH7280L",
       "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
@@ -198,14 +198,37 @@
       "isActive": true,
       "isDeleted": false,
       "bankDetails": {
-        "bankName": "",
-        "accountHolderName": "",
+        "bankName": "State Bank of India",
+        "accountHolderName": "SUMAN KUMAR SIHNA",
         "accountNumber": "",
-        "ifscCode": "",
+        "ifscCode": "SBIN0001234",
         "accountType": "Savings Account"
       },
       "createdAt": "2026-10-04T19:00:00.000Z",
       "updatedAt": "2026-10-04T19:00:00.000Z"
+    },
+    {
+      "id": "user-alok-005",
+      "fullName": "Alok Food Service",
+      "email": "alokfoodservice@gmail.com",
+      "phone": "+91 98765 12345",
+      "password": "User@123",
+      "aadhaarNumber": "6789 1234 5678",
+      "panNumber": "ALOKP1234M",
+      "photoUrl": "https://ui-avatars.com/api/?name=Alok+Food+Service&background=0284c7&color=fff",
+      "role": "user",
+      "balance": 0,
+      "isActive": true,
+      "isDeleted": false,
+      "bankDetails": {
+        "bankName": "State Bank of India",
+        "accountHolderName": "Alok Food Service",
+        "accountNumber": "38920194820",
+        "ifscCode": "SBIN0001234",
+        "accountType": "Savings Account"
+      },
+      "createdAt": "2026-10-05T08:00:00.000Z",
+      "updatedAt": "2026-10-05T08:00:00.000Z"
     }
   ],
   "transactions": [],
@@ -291,5 +314,5 @@
       "createdAt": "2026-10-04T15:05:22.958Z"
     }
   ],
-  "lastUpdated": "2026-10-04T20:22:58.309Z"
+  "lastUpdated": "2026-10-05T08:20:25.155Z"
 }

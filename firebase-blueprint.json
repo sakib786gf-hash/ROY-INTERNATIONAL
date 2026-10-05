@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile with authentication and wallet details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "balance": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "isDeleted": { "type": "boolean" },
+        "photoUrl": { "type": "string" },
+        "aadhaarNumber": { "type": "string" },
+        "panNumber": { "type": "string" },
+        "bankDetails": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "fullName", "email"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Wallet credit and debit transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "type": { "type": "string", "enum": ["credit", "debit", "withdrawal", "transfer", "interest"] },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "amount"]
+    },
+    "withdrawal": {
+      "title": "Withdrawal",
+      "description": "User withdrawal request to bank account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userPhone": { "type": "string" },
+        "amount": { "type": "number" },
+        "bankDetails": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "utrNumber": { "type": "string" },
+        "adminRemark": { "type": "string" },
+        "requestedAt": { "type": "string" },
+        "processedAt": { "type": "string" },
+        "processedBy": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "status"]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "User account and transaction alert",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "alert", "warning"] },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "message"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User documents keyed by user ID"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "transaction",
+      "description": "Platform transactions"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "withdrawal",
+      "description": "Withdrawal requests"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "notification",
+      "description": "System notifications"
+    }
+  }
+}

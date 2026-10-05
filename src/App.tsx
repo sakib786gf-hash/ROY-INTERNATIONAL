@@ -14,6 +14,8 @@ import { AddMoneyModal } from './components/wallet/AddMoneyModal';
 import { WithdrawMoneyModal } from './components/wallet/WithdrawMoneyModal';
 import { SendMoneyModal } from './components/wallet/SendMoneyModal';
 import { StorageService } from './services/storage';
+import { db } from './services/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { User, Transaction, WithdrawalRequest, NotificationItem, PlatformStats } from './types';
 
 export default function App() {
@@ -52,7 +54,7 @@ export default function App() {
 
   // Sync listener for storage changes and cross-device server sync
   useEffect(() => {
-    // Initial sync with backend server
+    // Initial sync with backend server / Firestore
     StorageService.syncWithServer().then(() => {
       refreshAllData();
     });
@@ -70,9 +72,20 @@ export default function App() {
     window.addEventListener('metal_wallet_data_changed', handleDataChanged);
     window.addEventListener('focus', handleFocus);
 
+    // Real-time Firestore cross-device listener
+    let unsubscribeFirestore = () => {};
+    try {
+      unsubscribeFirestore = onSnapshot(collection(db, 'users'), () => {
+        StorageService.syncWithServer().then(() => {
+          refreshAllData();
+        });
+      }, () => {});
+    } catch {}
+
     return () => {
       window.removeEventListener('metal_wallet_data_changed', handleDataChanged);
       window.removeEventListener('focus', handleFocus);
+      unsubscribeFirestore();
     };
   }, [refreshAllData]);
 

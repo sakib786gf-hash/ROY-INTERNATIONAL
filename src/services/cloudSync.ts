@@ -1,11 +1,13 @@
 import { User, Transaction, WithdrawalRequest, NotificationItem } from '../types';
+import { db } from './firebase';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 
 // Global Cloud Sync Endpoints - Active endpoints with CORS enabled for multi-device sync
 const PRIMARY_CLOUD_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a10b1c87c77b4c';
 const BACKUP_CLOUD_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a10b1cb2577b4d';
 
 export const CloudSync = {
-  // Pull latest users and records from global cloud / server into local state
+  // Pull latest users and records from Firestore / global cloud / server into local state
   async syncFromServer(): Promise<{
     success: boolean;
     users?: User[];
@@ -13,7 +15,76 @@ export const CloudSync = {
     withdrawals?: WithdrawalRequest[];
     notifications?: NotificationItem[];
   }> {
-    // 1. Primary Source of Truth: /api/sync on the Express Node server
+    // 1. Primary Source of Truth: Firebase Cloud Firestore (Direct cross-device real-time sync)
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      if (!usersSnap.empty) {
+        const firestoreUsers: User[] = [];
+        usersSnap.forEach((docSnap) => {
+          const u = docSnap.data() as User;
+          if (!u || !u.id) return;
+          const uId = (u.id || '').toLowerCase();
+          const uEmail = (u.email || '').toLowerCase();
+          if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return;
+          firestoreUsers.push({
+            id: u.id,
+            fullName: u.fullName || 'User',
+            email: (u.email || '').toLowerCase().trim(),
+            phone: u.phone || '',
+            password: u.password || 'User@123',
+            role: u.role === 'admin' ? 'admin' : 'user',
+            balance: typeof u.balance === 'number' ? u.balance : 0,
+            isActive: u.isActive !== false,
+            isDeleted: u.isDeleted === true,
+            photoUrl: u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName || 'User')}&background=0284c7&color=fff`,
+            aadhaarNumber: u.aadhaarNumber || 'Not Provided',
+            panNumber: u.panNumber || 'NOTPROVIDED',
+            bankDetails: {
+              bankName: u.bankDetails?.bankName || 'Not Linked',
+              accountHolderName: u.bankDetails?.accountHolderName || u.fullName || '',
+              accountNumber: u.bankDetails?.accountNumber || '',
+              ifscCode: u.bankDetails?.ifscCode || '',
+              accountType: u.bankDetails?.accountType || 'Savings Account',
+            },
+            createdAt: u.createdAt || new Date().toISOString(),
+            updatedAt: u.updatedAt || new Date().toISOString(),
+          });
+        });
+
+        if (firestoreUsers.length > 0) {
+          const transactions: Transaction[] = [];
+          const withdrawals: WithdrawalRequest[] = [];
+          const notifications: NotificationItem[] = [];
+
+          try {
+            const txSnap = await getDocs(collection(db, 'transactions'));
+            txSnap.forEach((d) => transactions.push(d.data() as Transaction));
+          } catch {}
+
+          try {
+            const wdrSnap = await getDocs(collection(db, 'withdrawals'));
+            wdrSnap.forEach((d) => withdrawals.push(d.data() as WithdrawalRequest));
+          } catch {}
+
+          try {
+            const notifSnap = await getDocs(collection(db, 'notifications'));
+            notifSnap.forEach((d) => notifications.push(d.data() as NotificationItem));
+          } catch {}
+
+          return {
+            success: true,
+            users: firestoreUsers,
+            transactions,
+            withdrawals,
+            notifications,
+          };
+        }
+      }
+    } catch {
+      // Fallback to Express backend or secondary cloud
+    }
+
+    // 2. Secondary Source of Truth: /api/sync on the Express Node server
     try {
       const res = await fetch(`/api/sync?_t=${Date.now()}`, {
         headers: { 'Content-Type': 'application/json' },
@@ -68,7 +139,7 @@ export const CloudSync = {
       // Server offline / standalone mode fallback
     }
 
-    // 2. Secondary Cloud REST API fallback (fetches and combines from both endpoints)
+    // 3. Tertiary Cloud REST API fallback (fetches and combines from both endpoints)
     const endpoints = [
       `${PRIMARY_CLOUD_ENDPOINT}?_t=${Date.now()}`,
       `${BACKUP_CLOUD_ENDPOINT}?_t=${Date.now()}`,
@@ -90,7 +161,6 @@ export const CloudSync = {
           if (res.ok) {
             const body = await res.json();
             if (body && body.data) {
-              // Check if part array is stored under 'u'
               if (typeof body.data.u === 'string') {
                 try {
                   const arr = JSON.parse(body.data.u);
@@ -127,55 +197,9 @@ export const CloudSync = {
                   }
                 } catch {}
               }
-
-              // Also parse key-value entries (u0, u1, etc.)
-              for (const [key, val] of Object.entries(body.data)) {
-                if (typeof val === 'string') {
-                  try {
-                    const parsed = JSON.parse(val);
-                    if (key.startsWith('u')) {
-                      const id = parsed.id || parsed.i;
-                      const email = (parsed.email || parsed.e || '').toLowerCase().trim();
-                      if (!id || id === 'user-ss-8910642' || email === 'ss8910642@gmail.com') continue;
-                      const uFullName = parsed.fullName || parsed.name || parsed.n || 'User';
-                      mergedUsersMap.set(id, {
-                        id,
-                        fullName: uFullName,
-                        email,
-                        phone: parsed.phone || parsed.p || '',
-                        password: parsed.password || parsed.pass || parsed.w || 'User@123',
-                        role: parsed.role || parsed.r || 'user',
-                        balance: typeof parsed.balance === 'number' ? parsed.balance : (typeof parsed.bal === 'number' ? parsed.bal : (typeof parsed.b === 'number' ? parsed.b : 0)),
-                        isActive: parsed.isActive !== false,
-                        isDeleted: parsed.isDeleted === true,
-                        photoUrl: parsed.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(uFullName)}&background=0284c7&color=fff`,
-                        aadhaarNumber: parsed.aadhaarNumber || parsed.aadh || parsed.a || 'Not Provided',
-                        panNumber: parsed.panNumber || parsed.pan || parsed.m || 'NOTPROVIDED',
-                        bankDetails: {
-                          bankName: parsed.bankDetails?.bankName || parsed.bank?.bankName || 'State Bank of India',
-                          accountHolderName: parsed.bankDetails?.accountHolderName || parsed.bank?.accountHolderName || uFullName,
-                          accountNumber: parsed.bankDetails?.accountNumber || parsed.bank?.accountNumber || '',
-                          ifscCode: parsed.bankDetails?.ifscCode || parsed.bank?.ifscCode || 'SBIN0001234',
-                          accountType: parsed.bankDetails?.accountType || parsed.bank?.accountType || 'Savings Account',
-                        },
-                        createdAt: parsed.createdAt || new Date().toISOString(),
-                        updatedAt: parsed.updatedAt || new Date().toISOString(),
-                      });
-                    } else if (key.startsWith('t')) {
-                      if (!mergedTransactions.some((t) => t.id === parsed.id)) mergedTransactions.push(parsed);
-                    } else if (key.startsWith('w')) {
-                      if (!mergedWithdrawals.some((w) => w.id === parsed.id)) mergedWithdrawals.push(parsed);
-                    } else if (key.startsWith('n')) {
-                      if (!mergedNotifications.some((n) => n.id === parsed.id)) mergedNotifications.push(parsed);
-                    }
-                  } catch {}
-                }
-              }
             }
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
       })
     );
 
@@ -193,7 +217,7 @@ export const CloudSync = {
     return { success: false };
   },
 
-  // Push all changes (users, withdrawals, transactions) to backend and global cloud
+  // Push all changes (users, withdrawals, transactions) to Firestore, backend, and secondary cloud
   async pushAllToServer(payload: {
     users?: User[];
     transactions?: Transaction[];
@@ -202,7 +226,31 @@ export const CloudSync = {
   }): Promise<boolean> {
     let cloudSaved = false;
 
-    // 1. Immediately push to local Express backend /api/sync if available
+    // 1. Immediately push to Firebase Firestore (Global real-time sync across all devices)
+    try {
+      if (Array.isArray(payload.users)) {
+        for (const u of payload.users) {
+          if (u && u.id && u.id !== 'user-ss-8910642') {
+            await setDoc(doc(db, 'users', u.id), u, { merge: true });
+          }
+        }
+      }
+      if (Array.isArray(payload.transactions)) {
+        for (const t of payload.transactions) {
+          if (t && t.id) await setDoc(doc(db, 'transactions', t.id), t, { merge: true });
+        }
+      }
+      if (Array.isArray(payload.withdrawals)) {
+        for (const w of payload.withdrawals) {
+          if (w && w.id) await setDoc(doc(db, 'withdrawals', w.id), w, { merge: true });
+        }
+      }
+      cloudSaved = true;
+    } catch {
+      // Continue to other fallbacks
+    }
+
+    // 2. Push to local Express backend /api/sync if available
     try {
       const sRes = await fetch('/api/sync', {
         method: 'POST',
@@ -212,75 +260,78 @@ export const CloudSync = {
       if (sRes.ok) {
         cloudSaved = true;
       }
-    } catch {
-      // Standalone / offline mode
-    }
+    } catch {}
 
-    // 2. Prepare compact user list
-    const cleanUsers = (payload.users || []).filter((u) => {
-      if (!u || !u.id) return false;
-      const uId = (u.id || '').toLowerCase();
-      const uEmail = (u.email || '').toLowerCase();
-      if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
-      return true;
-    });
+    // 3. Prepare compact user list for secondary cloud endpoints
+    try {
+      const cleanUsers = (payload.users || []).filter((u) => {
+        if (!u || !u.id) return false;
+        const uId = (u.id || '').toLowerCase();
+        const uEmail = (u.email || '').toLowerCase();
+        if (uId === 'user-ss-8910642' || uEmail === 'ss8910642@gmail.com') return false;
+        return true;
+      });
 
-    const compactUsers = cleanUsers.map((u) => ({
-      i: u.id,
-      n: u.fullName || 'User',
-      e: (u.email || '').toLowerCase().trim(),
-      p: u.phone || '',
-      w: u.password || 'User@123',
-      r: u.role || 'user',
-      b: typeof u.balance === 'number' ? u.balance : 0,
-    }));
+      const compactUsers = cleanUsers.map((u) => ({
+        i: u.id,
+        n: u.fullName || 'User',
+        e: (u.email || '').toLowerCase().trim(),
+        p: u.phone || '',
+        w: u.password || 'User@123',
+        r: u.role || 'user',
+        b: typeof u.balance === 'number' ? u.balance : 0,
+      }));
 
-    // Split users across 2 endpoints to stay strictly below 800 bytes per endpoint
-    const mid = Math.ceil(compactUsers.length / 2);
-    const part1 = compactUsers.slice(0, mid);
-    const part2 = compactUsers.slice(mid);
+      const mid = Math.ceil(compactUsers.length / 2);
+      const part1 = compactUsers.slice(0, mid);
+      const part2 = compactUsers.slice(mid);
 
-    const payload1 = JSON.stringify({
-      name: 'Metal Users Part 1',
-      data: { u: JSON.stringify(part1) },
-    });
+      const payload1 = JSON.stringify({
+        name: 'Metal Users Part 1',
+        data: { u: JSON.stringify(part1) },
+      });
 
-    const payload2 = JSON.stringify({
-      name: 'Metal Users Part 2',
-      data: { u: JSON.stringify(part2) },
-    });
+      const payload2 = JSON.stringify({
+        name: 'Metal Users Part 2',
+        data: { u: JSON.stringify(part2) },
+      });
 
-    await Promise.all([
-      fetch(PRIMARY_CLOUD_ENDPOINT, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload1,
-      }).then((r) => {
-        if (r.ok) cloudSaved = true;
-      }).catch(() => {}),
+      await Promise.all([
+        fetch(PRIMARY_CLOUD_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload1,
+        }).then((r) => {
+          if (r.ok) cloudSaved = true;
+        }).catch(() => {}),
 
-      fetch(BACKUP_CLOUD_ENDPOINT, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload2,
-      }).then((r) => {
-        if (r.ok) cloudSaved = true;
-      }).catch(() => {}),
-    ]);
+        fetch(BACKUP_CLOUD_ENDPOINT, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload2,
+        }).then((r) => {
+          if (r.ok) cloudSaved = true;
+        }).catch(() => {}),
+      ]);
+    } catch {}
 
     return cloudSaved;
   },
 
-  // Save single user immediately to global cloud and backend
+  // Save single user immediately to Firestore, backend, and global cloud
   async saveUserToServer(user: User): Promise<boolean> {
     try {
-      // Direct POST to /api/users
+      // 1. Direct write to Firebase Firestore
+      await setDoc(doc(db, 'users', user.id), user, { merge: true });
+
+      // 2. Direct POST to /api/users
       fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
       }).catch(() => {});
 
+      // 3. Update secondary cloud
       const current = await this.syncFromServer();
       const users = current.users || [];
       const idx = users.findIndex(
@@ -291,15 +342,70 @@ export const CloudSync = {
       } else {
         users.push(user);
       }
-      return await this.pushAllToServer({ ...current, users });
+      this.pushAllToServer({ ...current, users }).catch(() => {});
+      return true;
     } catch {
       return false;
     }
   },
 
-  // Cross-device login verification via server API
+  // Cross-device login verification via Firestore / server API
   async loginViaServer(userId: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
-    // 1. Try local server endpoint if on Express backend
+    const cleanInput = userId.trim().toLowerCase();
+    const cleanDigits = cleanInput.replace(/\D/g, '');
+    const cleanPass = password.trim();
+
+    // 1. Check directly in Firebase Firestore
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      let match: User | null = null;
+      snap.forEach((docSnap) => {
+        const u = docSnap.data() as User;
+        if (!u || !u.id) return;
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uPhone = (u.phone || '').replace(/\D/g, '');
+        const uAadh = (u.aadhaarNumber || '').replace(/\D/g, '');
+        const uPan = (u.panNumber || '').toLowerCase().trim();
+        const uId = (u.id || '').toLowerCase().trim();
+        const uName = (u.fullName || '').toLowerCase().trim();
+
+        if (
+          uEmail === cleanInput ||
+          uEmail.split('@')[0] === cleanInput ||
+          uName === cleanInput ||
+          (cleanDigits.length >= 7 && (uPhone.endsWith(cleanDigits) || cleanDigits.endsWith(uPhone))) ||
+          (cleanDigits.length === 12 && uAadh === cleanDigits) ||
+          (uPan && uPan === cleanInput) ||
+          uId === cleanInput
+        ) {
+          match = u;
+        }
+      });
+
+      if (match) {
+        const target = match as User;
+        const passMatch =
+          target.password === cleanPass ||
+          target.password?.toLowerCase() === cleanPass.toLowerCase() ||
+          cleanPass.toLowerCase() === 'user@123' ||
+          (target.email.toLowerCase() === 'sakib786gf@gmail.com' && cleanPass.toLowerCase() === 'sakib@123') ||
+          ((target.email.toLowerCase() === 'izazmolla3@gmail.com' ||
+            target.email.toLowerCase() === 'izazm728@gmail.com' ||
+            target.email.toLowerCase() === 'arabulsardar507@gmail.com') &&
+            cleanPass.toLowerCase() === 'izaz@123') ||
+          (target.email.toLowerCase() === 'sss8910642@gmail.com' &&
+            (cleanPass.toLowerCase() === 'suman@1234' ||
+             cleanPass.toLowerCase() === 'suman@123' ||
+             cleanPass === '123456'));
+        if (passMatch) {
+          return { success: true, user: target };
+        } else {
+          return { success: false, error: 'Incorrect password for this user ID.' };
+        }
+      }
+    } catch {}
+
+    // 2. Try local server endpoint if on Express backend
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -310,53 +416,7 @@ export const CloudSync = {
       if (res.ok && cType.includes('application/json')) {
         return await res.json();
       }
-    } catch {
-      // Server offline / Vercel static mode
-    }
-
-    // 2. Verify against global cloud database
-    try {
-      const cloudData = await this.syncFromServer();
-      if (cloudData.success && Array.isArray(cloudData.users)) {
-        const cleanInput = userId.trim().toLowerCase();
-        const cleanDigits = cleanInput.replace(/\D/g, '');
-        const target = cloudData.users.find((u) => {
-          const uEmail = (u.email || '').toLowerCase().trim();
-          const uPhone = (u.phone || '').replace(/\D/g, '');
-          const uAadh = (u.aadhaarNumber || '').replace(/\D/g, '');
-          return (
-            uEmail === cleanInput ||
-            uEmail.split('@')[0] === cleanInput ||
-            (u.fullName && u.fullName.toLowerCase().trim() === cleanInput) ||
-            (cleanDigits.length >= 7 && (uPhone.endsWith(cleanDigits) || cleanDigits.endsWith(uPhone))) ||
-            (cleanDigits.length === 12 && uAadh === cleanDigits) ||
-            (u.panNumber && u.panNumber.toLowerCase() === cleanInput) ||
-            (u.id && u.id.toLowerCase() === cleanInput)
-          );
-        });
-
-        if (target) {
-          const cleanPass = password.trim();
-          const passMatch =
-            target.password === cleanPass ||
-            target.password?.toLowerCase() === cleanPass.toLowerCase() ||
-            cleanPass.toLowerCase() === 'user@123' ||
-            (target.email.toLowerCase() === 'sakib786gf@gmail.com' && cleanPass.toLowerCase() === 'sakib@123') ||
-            ((target.email.toLowerCase() === 'izazmolla3@gmail.com' || target.email.toLowerCase() === 'izazm728@gmail.com' || target.email.toLowerCase() === 'arabulsardar507@gmail.com') && cleanPass.toLowerCase() === 'izaz@123') ||
-            (target.email.toLowerCase() === 'sss8910642@gmail.com' &&
-              (cleanPass.toLowerCase() === 'suman@1234' ||
-               cleanPass.toLowerCase() === 'suman@123' ||
-               cleanPass === '123456'));
-          if (passMatch) {
-            return { success: true, user: target };
-          } else {
-            return { success: false, error: 'Incorrect password for this user ID.' };
-          }
-        }
-      }
-    } catch {
-      // Fall through
-    }
+    } catch {}
 
     return { success: false, error: 'User account not found' };
   },
